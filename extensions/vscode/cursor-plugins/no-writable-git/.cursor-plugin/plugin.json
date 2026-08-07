@@ -1,0 +1,6 @@
+{
+  "name": "psibase-no-writable-git",
+  "version": "0.1.0",
+  "description": "Never run writable/action-oriented git commands; read-only git only",
+  "author": { "name": "psibase" }
+}

@@ -1,0 +1,10 @@
+---
+description: Service/plugin error style — assert/expect at actions; thiserror for typed errors
+globs: "packages/**/{service,plugin}/**/*.rs"
+alwaysApply: false
+---
+
+# Errors
+
+- Action boundary: `assert!` / `assert_eq!` / `.expect("…")` / `.unwrap()`. Do not wrap domain `Result`s in `abort_message` helpers.
+- Typed error enums: `thiserror::Error` + `#[error(...)]`. No custom `message()`; use `Display` / `to_string()`.

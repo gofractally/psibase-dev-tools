@@ -1,0 +1,13 @@
+---
+description: Prefer one shared type within a package backend; no parallel DTO mirrors
+globs: "packages/**/{service,query-service,plugin}/**/*.{rs,ts,tsx}"
+alwaysApply: false
+---
+
+# Package backend types
+
+Service, query-service, and plugin are one package backend — share types freely.
+
+- One type per concept. Do not mirror action/table DTOs as parallel domain structs with the same fields.
+- Prefer importing `crate::tables::*` / package table types over copying shapes.
+- Distinct names only when the shape or role actually differs (e.g. `SessionRow` vs aggregated `Session`).

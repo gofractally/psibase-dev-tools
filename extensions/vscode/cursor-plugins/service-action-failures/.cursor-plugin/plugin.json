@@ -1,0 +1,6 @@
+{
+  "name": "psibase-service-action-failures",
+  "version": "0.1.0",
+  "description": "Service/plugin error style — assert/expect at actions; thiserror for typed errors",
+  "author": { "name": "psibase" }
+}

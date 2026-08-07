@@ -1,0 +1,6 @@
+{
+  "name": "psibase-no-backward-compatibility",
+  "version": "0.1.0",
+  "description": "Do not preserve or design for backward compatibility; this is pre-alpha",
+  "author": { "name": "psibase" }
+}

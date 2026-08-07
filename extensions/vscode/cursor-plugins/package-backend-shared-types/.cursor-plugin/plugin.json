@@ -1,0 +1,6 @@
+{
+  "name": "psibase-package-backend-shared-types",
+  "version": "0.1.0",
+  "description": "Prefer one shared type within a package backend; no parallel DTO mirrors",
+  "author": { "name": "psibase" }
+}

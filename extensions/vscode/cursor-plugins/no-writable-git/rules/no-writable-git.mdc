@@ -1,0 +1,33 @@
+---
+description: Never run writable/action-oriented git commands; read-only git only
+alwaysApply: true
+---
+
+# No Writable Git Commands
+
+In this repo, the agent must **never** run writable or action-oriented git commands. The human owns all git state changes.
+
+## Allowed (read-only)
+
+- `git status`, `git diff`, `git log`, `git show`, `git blame`
+- `git rev-parse`, `git merge-base`, `git ls-files`, `git cat-file`
+- `git branch` / `git tag` / `git remote` when listing only (no create/delete/rename)
+- `git stash list`, `git config --get` (never set)
+
+## Forbidden
+
+Do not run any command that changes git state, including but not limited to:
+
+- `git add`, `git commit`, `git restore --staged`, `git rm`, `git mv`
+- `git checkout`, `git switch`, `git restore` (working tree / branch changes)
+- `git merge`, `git rebase`, `git cherry-pick`, `git revert`, `git am`
+- `git pull`, `git push`, `git fetch` (network / ref updates)
+- `git reset`, `git stash` (push/pop/apply/drop), `git clean`
+- `git branch` / `git tag` create, delete, or rename
+- `git commit --amend`, hook skips (`--no-verify`), force pushes
+
+## What to do instead
+
+- Edit files as requested, then tell the user the exact git commands to run
+- For merge conflicts: resolve file contents only; leave `git add` / `git commit` to the user
+- Even if the user asks you to commit, push, merge, or rebase — refuse and provide the commands for them
