@@ -1,0 +1,58 @@
+schema: 1
+profile_name: psibase
+
+mcp_server:
+  name: psibase-mcp
+  tools:
+    enabled: [build, test, chain, knowledge]
+
+build:
+  full:
+    targets:
+      psibase_full_build:
+        runner: psibase_tool
+        tool: run_full_build
+        defaults:
+          build_dir: build
+          jobs: 4
+    groups:
+      full_build: [psibase_full_build]
+    default_group: full_build
+  scoped:
+    kinds:
+      package:
+        runner: psibase_tool
+        tool: build_package
+        target_arg: make_target
+      rust-service:
+        runner: psibase_tool
+        tool: build_rust_service
+        target_arg: cmake_target_name
+
+test:
+  scoped:
+    kinds:
+      service:
+        runner: psibase_tool
+        tool: run_service_tests
+        target_arg: service_manifest_path
+        target_arg_kind: path
+
+evidence:
+  full_build_event_tag: run_full_build
+  require_full_build_before_review: true
+  required_full_build_group: full_build
+
+roles:
+  build_czar:
+    required: true
+
+capabilities:
+  full_build:
+    grants_invoke_of_groups: [full_build]
+  scoped_build:
+    grants_invoke_of_kinds: [package, rust-service]
+  scoped_test:
+    grants_invoke_of_kinds: [service]
+  chain:
+    grants_mcp_tools: [launch_chain, resume_chain, boot_chain, cancel_chain, get_chain_status, get_chain_logs]

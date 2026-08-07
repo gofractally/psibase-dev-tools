@@ -1,0 +1,196 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "build_rust_service",
+  "version": "1.0.0",
+  "description": "Build Rust service/query-service artifacts for a package selected by CMake target name.",
+  "executor": {
+    "type": "python",
+    "path": "../executors/build_rust_service.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "cmake_target_name"
+    ],
+    "properties": {
+      "cmake_target_name": {
+        "type": "string",
+        "description": "Explicit CMake target name (e.g. PremAccounts)."
+      },
+      "service_kind": {
+        "type": "string",
+        "enum": [
+          "service",
+          "query-service",
+          "both"
+        ],
+        "default": "service"
+      },
+      "workspace_root": {
+        "type": "string",
+        "default": "/root/psibase"
+      },
+      "target_dir": {
+        "type": "string",
+        "description": "Optional cargo-psibase --target-dir override."
+      },
+      "psibase_binary_path": {
+        "type": "string",
+        "description": "Optional explicit path to cargo-psibase binary."
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "cmake_target_name",
+      "service_kind",
+      "commands",
+      "summary",
+      "stdout",
+      "stderr",
+      "exit_code"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "build_rust_service"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "passed",
+          "failed",
+          "error"
+        ]
+      },
+      "cmake_target_name": {
+        "type": "string"
+      },
+      "service_kind": {
+        "type": "string"
+      },
+      "resolved_package_path": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "resolved_manifests": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "commands": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "duration_seconds": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "parse_quality": {
+        "type": "string",
+        "enum": [
+          "strict_prefix"
+        ],
+        "description": "How build diagnostic counts were parsed."
+      },
+      "error_count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Strict prefix-classified build error line count."
+      },
+      "warning_count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Strict prefix-classified build warning line count."
+      },
+      "error_word_hits": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Raw case-insensitive word hits for debugging only; may include library names or prose."
+      },
+      "warning_word_hits": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Raw case-insensitive word hits for debugging only; may include library names or prose."
+      },
+      "summary": {
+        "type": "string"
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "error_category": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "failure_excerpt": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      },
+      "exit_code": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed schema or required value checks."
+    },
+    {
+      "code": "environment_missing",
+      "description": "Required executable is missing."
+    },
+    {
+      "code": "resolution_failed",
+      "description": "CMake target could not be mapped to a package path."
+    },
+    {
+      "code": "unsupported_target",
+      "description": "Target does not map to a cargo_psibase_package entry."
+    },
+    {
+      "code": "manifest_not_found",
+      "description": "Expected service/query-service Cargo.toml could not be found."
+    },
+    {
+      "code": "build_failed",
+      "description": "cargo-psibase build command failed."
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "psibase",
   "displayName": "Psibase DX Tools",
-  "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers and AI contributor/dev rules",
+  "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers, AI rules, and MCP build/test/chain tools",
   "version": "0.1.0",
   "publisher": "psibase",
   "license": "MIT",
@@ -10,7 +10,7 @@
   },
   "categories": ["Linters", "Other"],
   "activationEvents": [
-    "workspaceContains:**/Cargo.toml"
+    "workspaceContains:**/packages/Cargo.toml"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -93,8 +93,10 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "sync-ai-tools": "node ./scripts/sync-ai-tools.mjs",
+    "compile": "npm run sync-ai-tools && tsc -p ./",
+    "watch": "npm run sync-ai-tools && tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

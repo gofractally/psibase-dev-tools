@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+    echo "ERROR: Direct 'cargo' invocation is not permitted outside ai-tools managed runs." >&2
+    echo "Use: ai-tools run <tool_name> or ai-tools team build|test (never raw cargo)." >&2
+    exit 97
+fi
+
+for candidate in /opt/cargo/bin/cargo /usr/local/bin/cargo /usr/bin/cargo; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
+echo "ERROR: Unable to locate the real cargo binary." >&2
+exit 127

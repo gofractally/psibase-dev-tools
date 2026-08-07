@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+    echo "ERROR: Direct 'cargo-psibase' invocation is not permitted outside ai-tools managed runs." >&2
+    echo "Use: run <tool_name> (for example: run run_service_tests)" >&2
+    exit 97
+fi
+
+for candidate in \
+    /root/psibase/build/rust/release/cargo-psibase \
+    /root/psibase/build/rust/debug/cargo-psibase \
+    /root/psibase/rust/target/release/cargo-psibase \
+    /root/psibase/rust/target/debug/cargo-psibase \
+    /usr/local/bin/cargo-psibase \
+    /usr/bin/cargo-psibase \
+    /root/.cargo/bin/cargo-psibase
+do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
+echo "ERROR: Unable to locate the real cargo-psibase binary." >&2
+exit 127

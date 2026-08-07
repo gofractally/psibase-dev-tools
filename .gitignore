@@ -1,0 +1,7 @@
+# Python (ai/tools local dev)
+ai/tools/.venv/
+ai/tools/build/
+ai/tools/**/__pycache__/
+ai/tools/**/*.pyc
+ai/tools/.pytest_cache/
+*.egg-info/

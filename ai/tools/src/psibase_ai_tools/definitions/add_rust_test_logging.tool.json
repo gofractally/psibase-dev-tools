@@ -1,0 +1,85 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "add_rust_test_logging",
+  "version": "1.0.0",
+  "description": "Generate logging/debugging snippets for psibase Rust service tests where stdout is visible from test code.",
+  "executor": {
+    "type": "python",
+    "path": "../executors/add_rust_test_logging.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "test_name"
+    ],
+    "properties": {
+      "test_name": {
+        "type": "string"
+      },
+      "log_values": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Variable or expression names to print in test-side logs."
+      },
+      "include_trace_helper": {
+        "type": "boolean",
+        "default": true
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "test_name",
+      "snippet",
+      "notes"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "add_rust_test_logging"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "error"
+        ]
+      },
+      "test_name": {
+        "type": "string"
+      },
+      "snippet": {
+        "type": "string"
+      },
+      "notes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed validation."
+    }
+  ]
+}

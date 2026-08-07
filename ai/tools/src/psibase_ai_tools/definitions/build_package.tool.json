@@ -1,0 +1,185 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "build_package",
+  "version": "1.0.0",
+  "description": "Build a specific package using make <target> in the configured build directory.",
+  "executor": {
+    "type": "python",
+    "path": "../executors/build_package.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "make_target"
+    ],
+    "properties": {
+      "make_target": {
+        "type": "string",
+        "description": "Explicit make target name (required)."
+      },
+      "workspace_root": {
+        "type": "string",
+        "default": "/root/psibase"
+      },
+      "build_dir": {
+        "type": "string",
+        "default": "build",
+        "description": "Absolute path or workspace-relative build directory."
+      },
+      "jobs": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "make_target",
+      "command",
+      "summary",
+      "stdout",
+      "stderr",
+      "exit_code"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "build_package"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "passed",
+          "failed",
+          "error"
+        ]
+      },
+      "workspace_root": {
+        "type": "string"
+      },
+      "build_dir": {
+        "type": "string"
+      },
+      "make_target": {
+        "type": "string"
+      },
+      "command": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "psi_output_hint": {
+        "type": "string"
+      },
+      "psi_output_exists": {
+        "type": "boolean"
+      },
+      "duration_seconds": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "parse_quality": {
+        "type": "string",
+        "enum": [
+          "strict_prefix"
+        ],
+        "description": "How build diagnostic counts were parsed."
+      },
+      "error_count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Strict prefix-classified build error line count."
+      },
+      "warning_count": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Strict prefix-classified build warning line count."
+      },
+      "error_word_hits": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Raw case-insensitive word hits for debugging only; may include library names or prose."
+      },
+      "warning_word_hits": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Raw case-insensitive word hits for debugging only; may include library names or prose."
+      },
+      "summary": {
+        "type": "string"
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "error_category": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "failure_excerpt": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      },
+      "exit_code": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed schema or required value checks."
+    },
+    {
+      "code": "environment_missing",
+      "description": "Required executable is missing."
+    },
+    {
+      "code": "build_dir_missing",
+      "description": "Build directory does not exist."
+    },
+    {
+      "code": "cmake_not_configured",
+      "description": "Build directory does not contain CMakeCache.txt."
+    },
+    {
+      "code": "invalid_target",
+      "description": "Specified make target does not exist."
+    },
+    {
+      "code": "build_failed",
+      "description": "make target build failed."
+    },
+    {
+      "code": "resource_busy",
+      "description": "Another build job already holds the lock on build_dir. Use the holder PID/job_id surfaced in the result to investigate, or pass a distinct build_dir."
+    }
+  ]
+}

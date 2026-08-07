@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ge 1 ]]; then
+    case "$1" in
+        /root/ai-dev/tools/executors/*.py|/root/ai-dev/tools/run_tool.py|/root/ai-tools/src/psibase_ai_tools/cli.py)
+            if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+                echo "ERROR: Direct python tool invocation is not permitted outside ai-tools managed runs." >&2
+                echo "Use: ai-tools run <tool_name> through the approved wrapper." >&2
+                exit 97
+            fi
+            ;;
+    esac
+fi
+
+for candidate in /usr/bin/python3 /usr/local/bin/python3 /bin/python3; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
+echo "ERROR: Unable to locate the real python3 binary." >&2
+exit 127

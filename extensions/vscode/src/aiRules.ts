@@ -1,12 +1,14 @@
 import * as path from "path";
 import * as vscode from "vscode";
+import { hasPsibaseWorkspace } from "./psibaseWorkspace";
 
 type CursorPluginsApi = {
   registerPath: (pluginPath: string) => void;
   unregisterPath: (pluginPath: string) => void;
 };
 
-const RULES = [
+/** Optional contributor/dev rules (settings toggles). */
+const TOGGLEABLE_RULES = [
   {
     id: "no-backward-compatibility",
     setting: "psibasePackage.aiRules.contributors.noBackwardCompatibility",
@@ -24,6 +26,9 @@ const RULES = [
     setting: "psibasePackage.aiRules.devs.serviceActionFailures",
   },
 ] as const;
+
+/** Always registered in a psibase workspace (no settings toggle). */
+const ALWAYS_ON_RULES = ["prefer-mcp-tools"] as const;
 
 function getCursorPlugins(): CursorPluginsApi | undefined {
   const cursor = (
@@ -47,22 +52,49 @@ function pluginDir(extensionPath: string, id: string): string {
 export function registerAiRules(context: vscode.ExtensionContext): void {
   const registered = new Set<string>();
 
+  const clearAll = () => {
+    const plugins = getCursorPlugins();
+    if (!plugins) return;
+    for (const dir of registered) {
+      plugins.unregisterPath(dir);
+    }
+    registered.clear();
+  };
+
+  const ensureRegistered = (plugins: CursorPluginsApi, dir: string) => {
+    if (!registered.has(dir)) {
+      plugins.registerPath(dir);
+      registered.add(dir);
+    }
+  };
+
+  const ensureUnregistered = (plugins: CursorPluginsApi, dir: string) => {
+    if (registered.has(dir)) {
+      plugins.unregisterPath(dir);
+      registered.delete(dir);
+    }
+  };
+
   const sync = () => {
     const plugins = getCursorPlugins();
     if (!plugins) return;
 
+    if (!hasPsibaseWorkspace()) {
+      clearAll();
+      return;
+    }
+
+    for (const id of ALWAYS_ON_RULES) {
+      ensureRegistered(plugins, pluginDir(context.extensionPath, id));
+    }
+
     const config = vscode.workspace.getConfiguration();
-    for (const rule of RULES) {
+    for (const rule of TOGGLEABLE_RULES) {
       const dir = pluginDir(context.extensionPath, rule.id);
-      const enabled = config.get<boolean>(rule.setting, true);
-      if (enabled) {
-        if (!registered.has(dir)) {
-          plugins.registerPath(dir);
-          registered.add(dir);
-        }
-      } else if (registered.has(dir)) {
-        plugins.unregisterPath(dir);
-        registered.delete(dir);
+      if (config.get<boolean>(rule.setting, true)) {
+        ensureRegistered(plugins, dir);
+      } else {
+        ensureUnregistered(plugins, dir);
       }
     }
   };
@@ -75,15 +107,9 @@ export function registerAiRules(context: vscode.ExtensionContext): void {
         sync();
       }
     }),
-    {
-      dispose: () => {
-        const plugins = getCursorPlugins();
-        if (!plugins) return;
-        for (const dir of registered) {
-          plugins.unregisterPath(dir);
-        }
-        registered.clear();
-      },
-    },
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      sync();
+    }),
+    { dispose: clearAll },
   );
 }

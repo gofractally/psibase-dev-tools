@@ -1,0 +1,167 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "rag_retrieve",
+  "version": "1.0.0",
+  "description": "Retrieve repository-aware code context from the local Ralph RAG service.",
+  "executor": {
+    "type": "python",
+    "path": "../executors/rag_retrieve.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "query"
+    ],
+    "properties": {
+      "query": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Natural-language retrieval query."
+      },
+      "top_k": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 8,
+        "description": "Maximum results to return."
+      },
+      "filters": {
+        "type": "object",
+        "description": "Optional metadata filters (language, service_name, wasm_modality, etc.)."
+      },
+      "service_url": {
+        "type": "string",
+        "default": "http://127.0.0.1:8100",
+        "description": "Override local RAG service base URL."
+      },
+      "timeout_seconds": {
+        "type": "number",
+        "minimum": 0.5,
+        "maximum": 30,
+        "default": 8,
+        "description": "HTTP timeout for local retrieval service call."
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "query",
+      "top_k",
+      "results",
+      "summary",
+      "error_code",
+      "error_category"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "rag_retrieve"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "passed",
+          "degraded",
+          "error"
+        ]
+      },
+      "query": {
+        "type": "string"
+      },
+      "top_k": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "score",
+            "file_path",
+            "line_start",
+            "line_end",
+            "language",
+            "scope_chain",
+            "entity_names",
+            "content"
+          ],
+          "properties": {
+            "score": {
+              "type": "number"
+            },
+            "file_path": {
+              "type": "string"
+            },
+            "line_start": {
+              "type": "integer"
+            },
+            "line_end": {
+              "type": "integer"
+            },
+            "language": {
+              "type": "string"
+            },
+            "scope_chain": {
+              "type": "string"
+            },
+            "entity_names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "index_info": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "summary": {
+        "type": "string"
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "error_category": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed schema or required value checks."
+    },
+    {
+      "code": "service_unavailable",
+      "description": "Local RAG service is unavailable. Caller should continue without RAG context."
+    },
+    {
+      "code": "service_error",
+      "description": "RAG service returned an error response."
+    }
+  ]
+}

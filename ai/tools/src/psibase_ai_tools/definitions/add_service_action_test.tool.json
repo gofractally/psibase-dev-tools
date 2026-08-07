@@ -1,0 +1,102 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "add_service_action_test",
+  "version": "1.0.0",
+  "description": "Generate a Rust service action test template for psibase test suites.",
+  "executor": {
+    "type": "python",
+    "path": "../executors/add_service_action_test.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "package_name",
+      "wrapper_alias",
+      "action_name",
+      "test_name"
+    ],
+    "properties": {
+      "package_name": {
+        "type": "string"
+      },
+      "wrapper_alias": {
+        "type": "string"
+      },
+      "action_name": {
+        "type": "string"
+      },
+      "test_name": {
+        "type": "string"
+      },
+      "setup_calls": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "action_call": {
+        "type": "string",
+        "description": "Full call expression such as Wrapper::push(&chain).my_action(...).get()?;"
+      },
+      "assertions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "test_name",
+      "snippet",
+      "line_by_line_why"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "add_service_action_test"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "error"
+        ]
+      },
+      "test_name": {
+        "type": "string"
+      },
+      "snippet": {
+        "type": "string"
+      },
+      "line_by_line_why": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed validation."
+    }
+  ]
+}

@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { registerAiRules } from "./aiRules";
 import { collectContentOverrides, isPackageRelevantDocument } from "./buffers";
 import { PackageGraphService } from "./graph";
+import { registerMcpServer } from "./mcpServer";
+import { findPsibaseWorkspaceFolders } from "./psibaseWorkspace";
 import {
   findCorrelated,
   registerCodeActions,
@@ -16,11 +18,12 @@ import {
 
 export function activate(context: vscode.ExtensionContext): void {
   registerAiRules(context);
+  registerMcpServer(context);
 
   const graphs = new PackageGraphService();
 
   const refreshAll = () => {
-    for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    for (const folder of findPsibaseWorkspaceFolders()) {
       graphs.refresh(folder.uri.fsPath, collectContentOverrides());
     }
   };
