@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { registerAiRules } from "./aiRules";
 import { collectContentOverrides, isPackageRelevantDocument } from "./buffers";
 import { PackageGraphService } from "./graph";
 import {
@@ -14,6 +15,8 @@ import {
 } from "./providers";
 
 export function activate(context: vscode.ExtensionContext): void {
+  registerAiRules(context);
+
   const graphs = new PackageGraphService();
 
   const refreshAll = () => {

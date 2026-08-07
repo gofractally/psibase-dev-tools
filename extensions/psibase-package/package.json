@@ -33,26 +33,58 @@
         "category": "Psibase package"
       }
     ],
-    "configuration": {
-      "title": "Psibase Package",
-      "properties": {
-        "psibasePackage.inlayHints.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show inlay hints labeling psibase naming slots."
-        },
-        "psibasePackage.semanticHighlighting.enabled": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Color psibase naming identifiers by entity type. Highlights naming strings in Cargo.toml, `#[psibase::service(name = ...)]` in `.rs`, and `package` lines in `.wit`.\n\n**NOTE:** VS Code **Editor: Semantic Highlighting** (`editor.semanticHighlighting.enabled`) must also be enabled."
-        },
-        "psibasePackage.statusBar.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show psibase package context in the status bar (right side)."
+    "configuration": [
+      {
+        "title": "Psibase Package",
+        "properties": {
+          "psibasePackage.inlayHints.enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show inlay hints labeling psibase naming slots."
+          },
+          "psibasePackage.semanticHighlighting.enabled": {
+            "type": "boolean",
+            "default": true,
+            "markdownDescription": "Color psibase naming identifiers by entity type. Highlights naming strings in Cargo.toml, `#[psibase::service(name = ...)]` in `.rs`, and `package` lines in `.wit`.\n\n**NOTE:** VS Code **Editor: Semantic Highlighting** (`editor.semanticHighlighting.enabled`) must also be enabled."
+          },
+          "psibasePackage.statusBar.enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Show psibase package context in the status bar (right side)."
+          }
+        }
+      },
+      {
+        "title": "AI Rules: Contributors",
+        "properties": {
+          "psibasePackage.aiRules.contributors.noBackwardCompatibility": {
+            "type": "boolean",
+            "default": true,
+            "description": "Do not preserve or design for backward compatibility (pre-alpha)."
+          },
+          "psibasePackage.aiRules.contributors.noWritableGit": {
+            "type": "boolean",
+            "default": true,
+            "description": "Never run writable/action-oriented git commands; read-only git only."
+          },
+          "psibasePackage.aiRules.contributors.packageBackendSharedTypes": {
+            "type": "boolean",
+            "default": true,
+            "description": "Prefer one shared type within a package backend; no parallel DTO mirrors."
+          }
+        }
+      },
+      {
+        "title": "AI Rules: Devs",
+        "properties": {
+          "psibasePackage.aiRules.devs.serviceActionFailures": {
+            "type": "boolean",
+            "default": true,
+            "description": "Service/plugin error style — assert/expect at actions; thiserror for typed errors."
+          }
         }
       }
-    },
+    ],
     "configurationDefaults": {
       "editor.semanticHighlighting.enabled": true,
       "files.associations": {
