@@ -4,7 +4,7 @@ import { ENTITY_META } from "./model";
 import { groupOccurrences } from "./scan";
 import { hoverMarkdown, quickFixForDiagnostic } from "./validate";
 
-const DIAGNOSTIC_SOURCE = "psibase-package";
+const DIAGNOSTIC_SOURCE = "psibase";
 
 export function registerDiagnostics(
   context: vscode.ExtensionContext,

@@ -11,3 +11,4 @@ This project is pre-alpha. **Backward compatibility is not a valid concern.**
 - Do not add shims, dual-write, deprecation windows, or migration layers unless the user explicitly asks
 - Prefer deleting/replacing the old path over supporting both
 - Do not mention or plan around "breaking existing users/clients" as a reason to keep dead code
+- Do not include statements about past code or decisions in comments.

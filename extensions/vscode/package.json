@@ -1,7 +1,7 @@
 {
-  "name": "psibase-package",
-  "displayName": "Psibase Package Naming",
-  "description": "Diagnostics, hover help, rename, and inlay hints for psibase package naming",
+  "name": "psibase",
+  "displayName": "Psibase DX Tools",
+  "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers and AI contributor/dev rules",
   "version": "0.1.0",
   "publisher": "psibase",
   "license": "MIT",

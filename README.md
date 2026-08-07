@@ -6,40 +6,34 @@ Extensions, AI rules, and other tooling that supports psibase development — ke
 
 | Path | Purpose |
 |------|---------|
-| `extensions/psibase-package/` | VS Code / Cursor extension for package naming + AI rules |
+| [`extensions/vscode/`](extensions/vscode/) | **Psibase DX Tools** — extension for VS Code-compatible IDEs |
 
-## Psibase package naming extension
+## Install Psibase DX Tools (local)
 
-Diagnostics, hover help, inlay hints, rename, and correlated-name navigation for psibase package naming. Also registers Cursor AI rules via the extension API (no writes into `.cursor/rules/`). Not published to the Marketplace.
-
-One-time setup:
+Not on the Marketplace.
 
 ```bash
-cd extensions/psibase-package
+cd extensions/vscode
 npm install
 npm run compile
 ```
 
-Then install with **Developer: Install Extension from Location...** and select `extensions/psibase-package`.
+Then in your IDE:
 
-### Package naming settings
+1. **Developer: Install Extension from Location...**
+2. Select the `extensions/vscode` folder
+3. Reload the window if the Extensions detail page still looks empty
 
-- `psibasePackage.inlayHints.enabled` (default `true`)
-- `psibasePackage.statusBar.enabled` (default `true`)
-- `psibasePackage.semanticHighlighting.enabled` (default `true`)
+Features, commands, and settings are documented in the extension README (also shown on the Extensions detail page after install):
 
-### AI Rules settings
+**[extensions/vscode/README.md](extensions/vscode/README.md)**
 
-All default `true`. Toggle under the extension settings categories:
+## Developing the extension
 
-**AI Rules: Contributors**
+```bash
+cd extensions/vscode
+npm install
+npm run compile   # or: npm run watch
+```
 
-- `psibasePackage.aiRules.contributors.noBackwardCompatibility`
-- `psibasePackage.aiRules.contributors.noWritableGit`
-- `psibasePackage.aiRules.contributors.packageBackendSharedTypes`
-
-**AI Rules: Devs**
-
-- `psibasePackage.aiRules.devs.serviceActionFailures`
-
-Rule text lives in `extensions/psibase-package/cursor-plugins/<rule-id>/`. In Cursor, enabled rules are registered with `vscode.cursor.plugins.registerPath`; disabled rules are unregistered. No-ops in plain VS Code.
+After code changes, reload the window (**Developer: Reload Window**) so the installed-from-location copy picks up `out/`.
