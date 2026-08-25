@@ -7,6 +7,11 @@ import {
   findPsibaseWorkspaceFolders,
   hasPsibaseWorkspace,
 } from "./psibaseWorkspace";
+import {
+  ensureManagedPython,
+  managedPythonPath,
+  RUNTIME_KEY,
+} from "./pythonRuntime";
 
 const execFileAsync = promisify(execFile);
 
@@ -63,12 +68,25 @@ function installMarkerPath(globalStorage: string): string {
   return path.join(globalStorage, "ai-tools-install.json");
 }
 
+/** True when the first-run work (runtime download / venv build) is pending. */
+function needsFirstRunSetup(globalStorage: string): boolean {
+  return (
+    !fs.existsSync(managedPythonPath(globalStorage)) ||
+    !fs.existsSync(venvPython(path.join(globalStorage, "ai-tools-venv")))
+  );
+}
+
 async function ensureVenv(
   context: vscode.ExtensionContext,
   packageRoot: string,
+  onProgress?: (message: string) => void,
 ): Promise<{ python: string; stateDir: string }> {
   const globalStorage = context.globalStorageUri.fsPath;
   await fs.promises.mkdir(globalStorage, { recursive: true });
+
+  // Self-contained pinned CPython; never touches the user's environment and
+  // never depends on a python3 already being on PATH.
+  const basePython = await ensureManagedPython(globalStorage, onProgress);
 
   const venvDir = path.join(globalStorage, "ai-tools-venv");
   const python = venvPython(venvDir);
@@ -85,10 +103,12 @@ async function ensureVenv(
       ) as {
         extensionVersion?: string;
         packageRoot?: string;
+        runtime?: string;
       };
       if (
         marker.extensionVersion !== extensionVersion ||
-        marker.packageRoot !== packageRoot
+        marker.packageRoot !== packageRoot ||
+        marker.runtime !== RUNTIME_KEY
       ) {
         needsInstall = true;
       }
@@ -99,12 +119,12 @@ async function ensureVenv(
     needsInstall = true;
   }
 
-  if (!fs.existsSync(python)) {
-    await execFileAsync("python3", ["-m", "venv", venvDir]);
-  }
-
   if (needsInstall) {
-    await execFileAsync(python, ["-m", "pip", "install", "--upgrade", "pip"]);
+    onProgress?.("Installing psibase ai-tools...");
+    // Rebuild from scratch: the venv hard-links to the base interpreter's
+    // install path, so a runtime bump silently breaks an existing venv.
+    await fs.promises.rm(venvDir, { recursive: true, force: true });
+    await execFileAsync(basePython, ["-m", "venv", venvDir]);
     await execFileAsync(python, ["-m", "pip", "install", packageRoot]);
     await fs.promises.writeFile(
       markerPath,
@@ -112,6 +132,7 @@ async function ensureVenv(
         {
           extensionVersion,
           packageRoot,
+          runtime: RUNTIME_KEY,
           installedAt: new Date().toISOString(),
         },
         null,
@@ -161,7 +182,20 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
     }
 
     try {
-      const { python, stateDir } = await ensureVenv(context, packageRoot);
+      const globalStorage = context.globalStorageUri.fsPath;
+      const setup = needsFirstRunSetup(globalStorage)
+        ? vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: "Psibase DX Tools: setting up Python environment",
+            },
+            (progress) =>
+              ensureVenv(context, packageRoot, (message) =>
+                progress.report({ message }),
+              ),
+          )
+        : ensureVenv(context, packageRoot);
+      const { python, stateDir } = await setup;
       // Re-register so extension upgrades replace prior command/env.
       unregister();
       mcp.registerServer({

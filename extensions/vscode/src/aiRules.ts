@@ -1,6 +1,10 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { hasPsibaseWorkspace } from "./psibaseWorkspace";
+import {
+  findPsibaseWorkspaceFolders,
+  hasPsibaseWorkspace,
+} from "./psibaseWorkspace";
 
 type CursorPluginsApi = {
   registerPath: (pluginPath: string) => void;
@@ -49,6 +53,71 @@ function pluginDir(extensionPath: string, id: string): string {
   return path.join(extensionPath, "cursor-plugins", id);
 }
 
+let warnedAboutLegacyRules = false;
+
+/**
+ * Earlier installers copied these rules into `<workspace>/.cursor/rules/`.
+ * Now that the extension registers them itself, a workspace copy means every
+ * rule is injected twice (and the stale copy wins on upgrades). Delete copies
+ * that are byte-identical to the bundled rule; warn once about divergent
+ * copies rather than destroying a user's customization.
+ */
+async function cleanupLegacyWorkspaceRules(
+  extensionPath: string,
+): Promise<void> {
+  const ruleIds = [
+    ...ALWAYS_ON_RULES,
+    ...TOGGLEABLE_RULES.map((rule) => rule.id),
+  ];
+  const divergent: string[] = [];
+
+  for (const folder of findPsibaseWorkspaceFolders()) {
+    for (const id of ruleIds) {
+      const workspaceCopy = path.join(
+        folder.uri.fsPath,
+        ".cursor",
+        "rules",
+        `${id}.mdc`,
+      );
+      let copyText: string;
+      try {
+        copyText = await fs.promises.readFile(workspaceCopy, "utf8");
+      } catch {
+        continue; // no leftover for this rule
+      }
+
+      let bundledText: string | undefined;
+      try {
+        bundledText = await fs.promises.readFile(
+          path.join(pluginDir(extensionPath, id), "rules", `${id}.mdc`),
+          "utf8",
+        );
+      } catch {
+        // bundled rule missing; treat the copy as divergent
+      }
+
+      if (bundledText !== undefined && copyText === bundledText) {
+        try {
+          await fs.promises.unlink(workspaceCopy);
+        } catch {
+          divergent.push(workspaceCopy);
+        }
+      } else {
+        divergent.push(workspaceCopy);
+      }
+    }
+  }
+
+  if (divergent.length > 0 && !warnedAboutLegacyRules) {
+    warnedAboutLegacyRules = true;
+    void vscode.window.showWarningMessage(
+      "Psibase DX Tools: found workspace copies of rules this extension now provides. " +
+        "They will duplicate (and may shadow) the extension's rules — please remove or merge: " +
+        divergent.join(", "),
+    );
+  }
+}
+
 export function registerAiRules(context: vscode.ExtensionContext): void {
   const registered = new Set<string>();
 
@@ -83,6 +152,8 @@ export function registerAiRules(context: vscode.ExtensionContext): void {
       clearAll();
       return;
     }
+
+    void cleanupLegacyWorkspaceRules(context.extensionPath);
 
     for (const id of ALWAYS_ON_RULES) {
       ensureRegistered(plugins, pluginDir(context.extensionPath, id));
