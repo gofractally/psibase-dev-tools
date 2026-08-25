@@ -8,7 +8,6 @@ from typing import Any, Iterable, Mapping
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 AI_TOOLS_ROOT = PACKAGE_ROOT.parents[1]
 TOOL_DEFINITIONS_DIR = PACKAGE_ROOT / "definitions"
-DEFAULT_WORKSPACE_ROOT = Path("/root/psibase")
 GUARDS_DIR = PACKAGE_ROOT / "guards"
 
 
@@ -46,10 +45,7 @@ def _first_mcp_workspace_root() -> str | None:
 
 def _host_workspace_root() -> Path:
     """Workspace from host env / cwd only — ignores caller ``workspace_root``."""
-    root = _first_mcp_workspace_root() or os.environ.get("WORKSPACE_ROOT")
-    if not root:
-        cwd = Path.cwd()
-        root = str(cwd if cwd.exists() else DEFAULT_WORKSPACE_ROOT)
+    root = _first_mcp_workspace_root() or os.environ.get("WORKSPACE_ROOT") or str(Path.cwd())
     return Path(str(root)).expanduser().resolve()
 
 
@@ -58,23 +54,21 @@ def detect_workspace_root(arguments: Mapping[str, Any] | None = None) -> Path:
 
     Precedence (first non-empty wins):
       1. Explicit ``workspace_root`` argument on the tool call.
-      2. ``MCP_WORKSPACE_ROOTS`` env (Cursor sets this per window). This is
-         above ``WORKSPACE_ROOT`` so a per-window setting from the host beats
-         a stale process env, which is what makes one MCP server safe to run
+      2. ``MCP_WORKSPACE_ROOTS`` env (the Psibase DX Tools extension sets this
+         per window when registering the server). This is above
+         ``WORKSPACE_ROOT`` so a per-window setting from the host beats a
+         stale process env, which is what makes one MCP server safe to run
          across multiple git worktrees / Cursor windows.
       3. ``WORKSPACE_ROOT`` env (manually set by the user).
       4. CWD where the server was launched.
-      5. Built-in default (``/root/psibase``).
     """
     explicit = (arguments or {}).get("workspace_root")
     root = (
         explicit
         or _first_mcp_workspace_root()
         or os.environ.get("WORKSPACE_ROOT")
+        or str(Path.cwd())
     )
-    if not root:
-        cwd = Path.cwd()
-        root = str(cwd if cwd.exists() else DEFAULT_WORKSPACE_ROOT)
     return Path(str(root)).expanduser().resolve()
 
 

@@ -5,7 +5,7 @@
   "description": "Start psinode on the existing db directory (continue block production). Optionally boot is not run; use boot_chain if the chain is unbooted.",
   "executor": {
     "type": "python",
-    "path": "../executors/resume_chain.py"
+    "path": "../lib/resume_chain.py"
   },
   "inputSchema": {
     "type": "object",

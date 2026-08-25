@@ -5,7 +5,7 @@
   "description": "Generate logging/debugging snippets for psibase Rust service tests where stdout is visible from test code.",
   "executor": {
     "type": "python",
-    "path": "../executors/add_rust_test_logging.py"
+    "path": "../lib/add_rust_test_logging.py"
   },
   "inputSchema": {
     "type": "object",

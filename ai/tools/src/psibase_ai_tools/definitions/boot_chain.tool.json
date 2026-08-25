@@ -5,7 +5,7 @@
   "description": "Run psibase boot -a <api_url> -p <producer> against an already-running unbooted node.",
   "executor": {
     "type": "python",
-    "path": "../executors/boot_chain.py"
+    "path": "../lib/boot_chain.py"
   },
   "inputSchema": {
     "type": "object",

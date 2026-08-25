@@ -23,9 +23,9 @@ MCP stdio entrypoint:
 
 ## Layout
 
-| Path                                | Role                                    |
-| ----------------------------------- | --------------------------------------- |
-| `src/psibase_ai_tools/lib/`         | Build/test/chain implementations        |
-| `src/psibase_ai_tools/mcp/`         | MCP stdio adapter                       |
-| `src/psibase_ai_tools/data/`        | Packaged default `project-profile.yaml` |
-| `src/psibase_ai_tools/definitions/` | Tool JSON schemas                       |
+| Path                                | Role                                     |
+| ----------------------------------- | ---------------------------------------- |
+| `src/psibase_ai_tools/lib/`         | Build/test/chain implementations         |
+| `src/psibase_ai_tools/mcp/`         | MCP stdio adapter                        |
+| `src/psibase_ai_tools/definitions/` | Tool JSON schemas                        |
+| `src/psibase_ai_tools/guards/`      | PATH shims that block raw builds/tests   |

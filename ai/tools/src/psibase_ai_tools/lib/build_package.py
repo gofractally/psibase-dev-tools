@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import time
 from typing import Any, Dict, Optional, Tuple
@@ -13,6 +12,7 @@ from pathlib import Path
 from . import locks
 from ._streaming import stream_subprocess
 from .build_diagnostics import count_build_diagnostics
+from .workspace_root import detect_workspace_root
 
 BUILD_LOCK_SUFFIX = ".ai-tools-build.lock"
 
@@ -151,7 +151,7 @@ def main() -> int:
         print(json.dumps(out, indent=2))
         return 1
 
-    workspace_root = data.get("workspace_root", "/root/psibase")
+    workspace_root = str(detect_workspace_root(data))
     build_dir = resolve_build_dir(workspace_root, data.get("build_dir", "build"))
     make_target = data["make_target"].strip()
     jobs = data.get("jobs", default_jobs())

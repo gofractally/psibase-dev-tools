@@ -84,11 +84,6 @@ def _port_in_use(port: int, *, host: str = "127.0.0.1") -> tuple[bool, str | Non
             pass
 
 
-def _lock_path_for(db_dir: Path) -> Path:
-    """Backwards-compat helper used by tests; delegates to locks.lock_path_for."""
-    return locks.lock_path_for(db_dir, suffix=LOCK_SUFFIX)
-
-
 def _acquire_db_lock(db_dir: Path, *, tool: str, workspace_root: Path):
     return locks.acquire_dir_lock(db_dir, suffix=LOCK_SUFFIX, tool=tool, workspace_root=workspace_root)
 

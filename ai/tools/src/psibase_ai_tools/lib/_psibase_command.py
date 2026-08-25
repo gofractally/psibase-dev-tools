@@ -5,26 +5,22 @@ import subprocess
 from typing import List, Optional, Tuple
 
 
-def _probe_explicit_cargo_psibase(subcommand: str) -> Optional[List[str]]:
+def _probe_workspace_cargo_psibase(workspace_root: Optional[str], subcommand: str) -> Optional[List[str]]:
     """
-    Look for a repo-built cargo-psibase binary in well-known psibase locations.
-    This allows the tooling to work even when PATH in the tool environment
-    does not include the interactive shell's additions.
+    Look for a repo-built cargo-psibase binary in the workspace's canonical
+    CMake build outputs. A fresh repo build always wins over any installed
+    binary on PATH, so agents exercise the code they just built.
 
-    Order matters: the canonical CMake build outputs (build/rust/release,
-    build/rust/debug, build/bin) must be checked before any system-install
-    paths so a fresh build always wins over a stale or unrelated install.
     The legacy `rust/target/*` paths are intentionally not probed because
     they can hold months-old binaries from a direct `cargo build` and would
     silently shadow the canonical build outputs.
     """
+    if not workspace_root:
+        return None
     candidates = [
-        "/root/psibase/build/rust/release/cargo-psibase",
-        "/root/psibase/build/rust/debug/cargo-psibase",
-        "/root/psibase/build/bin/cargo-psibase",
-        "/usr/local/bin/cargo-psibase",
-        "/usr/bin/cargo-psibase",
-        "/root/.cargo/bin/cargo-psibase",
+        os.path.join(workspace_root, "build", "rust", "release", "cargo-psibase"),
+        os.path.join(workspace_root, "build", "rust", "debug", "cargo-psibase"),
+        os.path.join(workspace_root, "build", "bin", "cargo-psibase"),
     ]
     for path in candidates:
         if os.path.isfile(path) and os.access(path, os.X_OK):
@@ -32,18 +28,20 @@ def _probe_explicit_cargo_psibase(subcommand: str) -> Optional[List[str]]:
     return None
 
 
-def choose_psibase_subcommand(subcommand: str) -> Tuple[Optional[List[str]], Optional[str]]:
+def choose_psibase_subcommand(
+    subcommand: str, workspace_root: Optional[str] = None
+) -> Tuple[Optional[List[str]], Optional[str]]:
     """
     Select the psibase command-line prefix for a given subcommand.
 
     Preference order:
-      1. Explicit repo-built `cargo-psibase <subcommand>` from known locations
+      1. Repo-built `cargo-psibase <subcommand>` from the workspace build tree
       2. `cargo-psibase <subcommand>` discovered via PATH
       3. `cargo psibase <subcommand>` if available
     """
-    explicit = _probe_explicit_cargo_psibase(subcommand)
-    if explicit is not None:
-        return explicit, None
+    from_workspace = _probe_workspace_cargo_psibase(workspace_root, subcommand)
+    if from_workspace is not None:
+        return from_workspace, None
 
     if shutil.which("cargo-psibase") is not None:
         return ["cargo-psibase", subcommand], None
@@ -59,6 +57,7 @@ def choose_psibase_subcommand(subcommand: str) -> Tuple[Optional[List[str]], Opt
         if "no such command: `psibase`" not in probe_text:
             return ["cargo", "psibase", subcommand], None
 
-    return None, "Neither `cargo-psibase` nor `cargo psibase` is available in PATH or in known psibase build locations."
-
-
+    return None, (
+        "Neither `cargo-psibase` nor `cargo psibase` is available in PATH or in the "
+        "workspace build tree (build/rust/{release,debug}, build/bin)."
+    )

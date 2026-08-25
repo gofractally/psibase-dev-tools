@@ -5,7 +5,7 @@
   "description": "Build Rust service/query-service artifacts for a package selected by CMake target name.",
   "executor": {
     "type": "python",
-    "path": "../executors/build_rust_service.py"
+    "path": "../lib/build_rust_service.py"
   },
   "inputSchema": {
     "type": "object",
@@ -29,7 +29,7 @@
       },
       "workspace_root": {
         "type": "string",
-        "default": "/root/psibase"
+        "description": "Absolute path to the psibase repo. Defaults to the auto-detected workspace root."
       },
       "target_dir": {
         "type": "string",

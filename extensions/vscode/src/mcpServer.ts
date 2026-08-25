@@ -3,7 +3,10 @@ import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
-import { hasPsibaseWorkspace } from "./psibaseWorkspace";
+import {
+  findPsibaseWorkspaceFolders,
+  hasPsibaseWorkspace,
+} from "./psibaseWorkspace";
 
 const execFileAsync = promisify(execFile);
 
@@ -128,8 +131,6 @@ async function ensureVenv(
 }
 
 export function registerMcpServer(context: vscode.ExtensionContext): void {
-  let registered = false;
-
   const unregister = () => {
     const mcp = getCursorMcp();
     if (!mcp) return;
@@ -139,7 +140,6 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
     } catch {
       // Best-effort; Cursor may not have this server registered.
     }
-    registered = false;
   };
 
   const sync = async () => {
@@ -171,10 +171,17 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
           args: ["-m", "psibase_ai_tools.mcp"],
           env: {
             AI_TOOLS_STATE_DIR: stateDir,
+            // Binds this window's server to its psibase folder(s); the Python
+            // side (detect_workspace_root) reads this ahead of WORKSPACE_ROOT
+            // and CWD, so parallel worktrees / windows stay isolated.
+            MCP_WORKSPACE_ROOTS: JSON.stringify(
+              findPsibaseWorkspaceFolders().map(
+                (folder) => folder.uri.fsPath,
+              ),
+            ),
           },
         },
       });
-      registered = true;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       void vscode.window.showErrorMessage(

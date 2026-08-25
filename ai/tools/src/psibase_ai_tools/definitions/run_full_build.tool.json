@@ -5,7 +5,7 @@
   "description": "Run the canonical psibase full baseline build (configure-if-needed + make install).",
   "executor": {
     "type": "python",
-    "path": "../executors/run_full_build.py"
+    "path": "../lib/run_full_build.py"
   },
   "inputSchema": {
     "type": "object",
@@ -13,7 +13,7 @@
     "properties": {
       "workspace_root": {
         "type": "string",
-        "default": "/root/psibase"
+        "description": "Absolute path to the psibase repo. Defaults to the auto-detected workspace root."
       },
       "build_dir": {
         "type": "string",

@@ -7,8 +7,6 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
-DEFAULT_WORKSPACE_ROOT = Path("/root/psibase")
-
 
 def _first_mcp_workspace_root() -> str | None:
     raw = os.environ.get("MCP_WORKSPACE_ROOTS")
@@ -32,10 +30,10 @@ def detect_workspace_root(arguments: Mapping[str, Any] | None = None) -> Path:
 
     Precedence (first non-empty wins):
       1. Explicit ``workspace_root`` argument on the tool call.
-      2. ``MCP_WORKSPACE_ROOTS`` env (Cursor sets this per window).
+      2. ``MCP_WORKSPACE_ROOTS`` env (the Psibase DX Tools extension sets
+         this per window when registering the server).
       3. ``WORKSPACE_ROOT`` env (manually set by the user).
       4. CWD.
-      5. Built-in default (``/root/psibase``).
 
     Mirrors :func:`psibase_ai_tools.mcp.paths.detect_workspace_root`. The
     ``MCP_WORKSPACE_ROOTS`` step ranks above ``WORKSPACE_ROOT`` so one MCP
@@ -47,8 +45,6 @@ def detect_workspace_root(arguments: Mapping[str, Any] | None = None) -> Path:
         explicit
         or _first_mcp_workspace_root()
         or os.environ.get("WORKSPACE_ROOT")
+        or str(Path.cwd())
     )
-    if not root:
-        cwd = Path.cwd()
-        root = str(cwd if cwd.exists() else DEFAULT_WORKSPACE_ROOT)
     return Path(str(root)).expanduser().resolve()

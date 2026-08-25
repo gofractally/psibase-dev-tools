@@ -3,8 +3,6 @@ import argparse
 import json
 import os
 import re
-import shutil
-import subprocess
 import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
@@ -12,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from ._psibase_command import choose_psibase_subcommand
 from ._streaming import stream_subprocess
 from .build_diagnostics import count_build_diagnostics
+from .workspace_root import detect_workspace_root
 
 
 def parse_args() -> argparse.Namespace:
@@ -113,7 +112,9 @@ def find_cargo_package_path(workspace_root: str, cmake_target_name: str) -> Opti
     return None
 
 
-def choose_build_prefix(psibase_binary_path: Optional[str]) -> Tuple[Optional[List[str]], Optional[str]]:
+def choose_build_prefix(
+    psibase_binary_path: Optional[str], workspace_root: Optional[str] = None
+) -> Tuple[Optional[List[str]], Optional[str]]:
     if psibase_binary_path:
         if os.path.isfile(psibase_binary_path):
             return [psibase_binary_path, "build"], None
@@ -121,7 +122,7 @@ def choose_build_prefix(psibase_binary_path: Optional[str]) -> Tuple[Optional[Li
 
     # Prefer the repo-built cargo-psibase binary when available, falling back to
     # the cargo subcommand only if necessary.
-    return choose_psibase_subcommand("build")
+    return choose_psibase_subcommand("build", workspace_root)
 
 
 def manifests_for_kind(package_root: str, service_kind: str) -> List[str]:
@@ -179,7 +180,7 @@ def main() -> int:
 
     cmake_target_name = data["cmake_target_name"].strip()
     service_kind = data.get("service_kind", "service")
-    workspace_root = data.get("workspace_root", "/root/psibase")
+    workspace_root = str(detect_workspace_root(data))
     target_dir = data.get("target_dir")
     psibase_binary_path = data.get("psibase_binary_path")
 
@@ -246,7 +247,7 @@ def main() -> int:
         print(json.dumps(out, indent=2))
         return 1
 
-    prefix, prefix_error = choose_build_prefix(psibase_binary_path)
+    prefix, prefix_error = choose_build_prefix(psibase_binary_path, workspace_root)
     if prefix is None:
         out = make_result(
             ok=False,

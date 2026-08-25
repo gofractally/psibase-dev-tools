@@ -5,7 +5,7 @@
   "description": "Remove the local psibase db directory, start psinode, wait for HTTP admin status, run psibase boot by default, then keep psinode running until it exits.",
   "executor": {
     "type": "python",
-    "path": "../executors/launch_chain.py"
+    "path": "../lib/launch_chain.py"
   },
   "inputSchema": {
     "type": "object",

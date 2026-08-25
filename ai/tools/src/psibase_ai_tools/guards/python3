@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Block direct invocation of this package's tool modules; everything else
+# passes through so ordinary python3 usage keeps working.
 if [[ $# -ge 1 ]]; then
     case "$1" in
-        /root/ai-dev/tools/executors/*.py|/root/ai-dev/tools/run_tool.py|/root/ai-tools/src/psibase_ai_tools/cli.py)
+        */psibase_ai_tools/lib/*.py|*/psibase_ai_tools/cli.py)
             if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
                 echo "ERROR: Direct python tool invocation is not permitted outside ai-tools managed runs." >&2
                 echo "Use: ai-tools run <tool_name> through the approved wrapper." >&2
@@ -13,11 +15,13 @@ if [[ $# -ge 1 ]]; then
     esac
 fi
 
-for candidate in /usr/bin/python3 /usr/local/bin/python3 /bin/python3; do
-    if [[ -x "$candidate" ]]; then
+# Exec the next 'python3' on PATH, skipping this guard directory.
+guard_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+while IFS= read -r candidate; do
+    if [[ "$(cd "$(dirname "$candidate")" && pwd)" != "$guard_dir" ]]; then
         exec "$candidate" "$@"
     fi
-done
+done < <(type -aP python3)
 
-echo "ERROR: Unable to locate the real python3 binary." >&2
+echo "ERROR: Unable to locate the real python3 binary on PATH." >&2
 exit 127

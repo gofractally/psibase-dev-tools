@@ -5,7 +5,7 @@
   "description": "Lookup concise psibase-specific implementation guidance from tagged knowledge snippets.",
   "executor": {
     "type": "python",
-    "path": "../executors/lookup.py"
+    "path": "../lib/lookup.py"
   },
   "inputSchema": {
     "type": "object",

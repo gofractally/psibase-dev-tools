@@ -147,8 +147,11 @@ def main() -> int:
     top_k = input_data.get("top_k", 3)
     query_tokens = tokenize(query)
 
-    repo_root = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
-    knowledge_dir = os.path.join(repo_root, "knowledge")
+    # Same root and env override as mcp.resources: <ai-tools root>/knowledge,
+    # where the ai-tools root is two levels above the package (src/.. = ai/tools).
+    package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    tools_root = os.path.normpath(os.path.join(package_root, "..", ".."))
+    knowledge_dir = os.environ.get("AI_TOOLS_KNOWLEDGE_DIR") or os.path.join(tools_root, "knowledge")
     index_path = os.path.join(knowledge_dir, "index.json")
 
     if not os.path.isfile(index_path):

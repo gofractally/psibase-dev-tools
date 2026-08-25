@@ -22,7 +22,7 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 
 def _job_log_paths() -> tuple[Optional[Path], Optional[Path]]:
@@ -122,7 +122,3 @@ def stream_subprocess(
 
 
 __all__ = ["stream_subprocess", "streaming_enabled"]
-
-
-# Backwards-compat re-export for callers that already import via Any.
-_ = Any  # silence unused import warning when type checkers run

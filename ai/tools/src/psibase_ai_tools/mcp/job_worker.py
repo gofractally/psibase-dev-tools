@@ -47,8 +47,8 @@ def main() -> int:
     os.environ["AI_TOOLS_JOB_ID"] = args.job_id
     os.environ["AI_TOOLS_JOB_STDOUT_PATH"] = str(stdout_log)
     os.environ["AI_TOOLS_JOB_STDERR_PATH"] = str(stderr_log)
-    # Legacy alias kept for callers (e.g. chain_psinode) that still read the
-    # original env var name.
+    # Normally already set by jobs.start_tool_job on the worker's env; keep it
+    # for direct invocations since chain_psinode and locks read this name.
     os.environ.setdefault("AI_DEV_MCP_JOB_ID", args.job_id)
 
     started = time.monotonic()

@@ -5,7 +5,7 @@
   "description": "Build a specific package using make <target> in the configured build directory.",
   "executor": {
     "type": "python",
-    "path": "../executors/build_package.py"
+    "path": "../lib/build_package.py"
   },
   "inputSchema": {
     "type": "object",
@@ -20,7 +20,7 @@
       },
       "workspace_root": {
         "type": "string",
-        "default": "/root/psibase"
+        "description": "Absolute path to the psibase repo. Defaults to the auto-detected workspace root."
       },
       "build_dir": {
         "type": "string",

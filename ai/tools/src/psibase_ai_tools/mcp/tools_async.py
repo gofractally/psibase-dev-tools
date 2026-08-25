@@ -1,23 +1,15 @@
-"""Profile-aware MCP async tool starters."""
+"""MCP async tool starters.
+
+Maps each async MCP tool name to its ``psibase_ai_tools.lib`` implementation
+module and the argument fields that must resolve inside the workspace.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from psibase_ai_tools.project_profile import ProjectProfile, packaged_default_profile
-
 from . import jobs
 from .paths import detect_workspace_root, normalize_arguments
-
-
-def _active_profile() -> ProjectProfile:
-    try:
-        from psibase_ai_tools.project_profile import load_profile
-
-        ws = detect_workspace_root({})
-        return load_profile(ws)
-    except Exception:
-        return packaged_default_profile()
 
 
 BUILD_STARTERS = {
@@ -36,51 +28,24 @@ CHAIN_STARTERS = {
 }
 
 
-def build_starters_for_profile(profile: ProjectProfile | None = None) -> dict[str, tuple[str, tuple[str, ...]]]:
-    profile = profile or _active_profile()
-    starters = dict(BUILD_STARTERS)
-    if "build" not in profile.mcp_tool_families_enabled:
-        return {}
-    return starters
-
-
-def test_starters_for_profile(profile: ProjectProfile | None = None) -> dict[str, tuple[str, tuple[str, ...]]]:
-    profile = profile or _active_profile()
-    if "test" not in profile.mcp_tool_families_enabled:
-        return {}
-    return dict(TEST_STARTERS)
-
-
-def chain_starters_for_profile(profile: ProjectProfile | None = None) -> dict[str, tuple[str, tuple[str, ...]]]:
-    profile = profile or _active_profile()
-    if "chain" not in profile.mcp_tool_families_enabled:
-        return {}
-    return dict(CHAIN_STARTERS)
-
-
 def start_build(mcp_name: str, arguments: dict[str, Any] | None) -> dict[str, Any]:
-    starters = build_starters_for_profile()
-    if mcp_name not in starters:
-        raise ValueError(f"build starter not enabled: {mcp_name}")
-    tool_name, path_fields = starters[mcp_name]
+    if mcp_name not in BUILD_STARTERS:
+        raise ValueError(f"unknown build starter: {mcp_name}")
+    tool_name, path_fields = BUILD_STARTERS[mcp_name]
     normalized = normalize_arguments(arguments, path_fields=path_fields)
     return jobs.start_tool_job(tool_name, normalized, family="build")
 
 
 def start_tests(arguments: dict[str, Any] | None) -> dict[str, Any]:
-    starters = test_starters_for_profile()
-    if "start_service_tests" not in starters:
-        raise ValueError("test starters not enabled for active profile")
-    tool_name, path_fields = starters["start_service_tests"]
+    tool_name, path_fields = TEST_STARTERS["start_service_tests"]
     normalized = normalize_arguments(arguments, path_fields=path_fields)
     return jobs.start_tool_job(tool_name, normalized, family="test")
 
 
 def start_chain(mcp_name: str, arguments: dict[str, Any] | None) -> dict[str, Any]:
-    starters = chain_starters_for_profile()
-    if mcp_name not in starters:
-        raise ValueError(f"chain starter not enabled: {mcp_name}")
-    tool_name, path_fields = starters[mcp_name]
+    if mcp_name not in CHAIN_STARTERS:
+        raise ValueError(f"unknown chain starter: {mcp_name}")
+    tool_name, path_fields = CHAIN_STARTERS[mcp_name]
     normalized = normalize_arguments(arguments, path_fields=path_fields)
     return jobs.start_tool_job(tool_name, normalized, family="chain")
 

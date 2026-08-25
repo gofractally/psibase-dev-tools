@@ -4,7 +4,6 @@ import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -246,27 +245,23 @@ def summary_text(stats: Dict[str, int]) -> str:
     )
 
 
-def choose_test_command_prefix() -> Tuple[Optional[List[str]], Optional[str]]:
+def choose_test_command_prefix(workspace_root: Optional[str] = None) -> Tuple[Optional[List[str]], Optional[str]]:
     # Prefer the repo-built cargo-psibase binary when available, falling back to
     # the cargo subcommand only if necessary.
-    return choose_psibase_subcommand("test")
+    return choose_psibase_subcommand("test", workspace_root)
 
 
 def infer_psitest_path(workspace_root: str) -> Optional[str]:
-    path_candidate = shutil.which("psitest")
-    if path_candidate:
-        return path_candidate
-
+    # Workspace build outputs first so a fresh repo build wins over an
+    # installed psitest on PATH.
     candidates = [
         os.path.join(workspace_root, "build", "psidk", "bin", "psitest"),
         os.path.join(workspace_root, "build", "psitest"),
-        "/root/psibase/build/psidk/bin/psitest",
-        "/root/psibase/build/psitest",
     ]
     for candidate in candidates:
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             return candidate
-    return None
+    return shutil.which("psitest")
 
 
 def main() -> int:
@@ -347,7 +342,7 @@ def main() -> int:
     if not workspace_root:
         workspace_root = os.path.dirname(service_manifest_path)
 
-    command_prefix, prefix_error = choose_test_command_prefix()
+    command_prefix, prefix_error = choose_test_command_prefix(workspace_root)
     if command_prefix is None:
         result = error_result(
             command=command,

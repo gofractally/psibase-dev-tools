@@ -5,7 +5,7 @@
   "description": "Generate a Rust service action test template for psibase test suites.",
   "executor": {
     "type": "python",
-    "path": "../executors/add_service_action_test.py"
+    "path": "../lib/add_service_action_test.py"
   },
   "inputSchema": {
     "type": "object",

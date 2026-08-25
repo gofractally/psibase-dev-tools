@@ -20,4 +20,4 @@ ai-tools-mcp = "psibase_ai_tools.mcp.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-psibase_ai_tools = ["definitions/*.json", "guards/*", "data/*"]
+psibase_ai_tools = ["definitions/*.json", "guards/*"]

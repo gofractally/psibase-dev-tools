@@ -1,7 +1,7 @@
 import importlib
 from typing import Any
 
-from .paths import detect_workspace_root, enforce_host_workspace, normalize_arguments
+from .paths import normalize_arguments
 
 
 SYNC_TOOLS = {

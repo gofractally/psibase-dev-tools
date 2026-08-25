@@ -5,7 +5,7 @@
   "description": "Generate a Rust GraphQL test template for psibase service test suites.",
   "executor": {
     "type": "python",
-    "path": "../executors/add_graphql_test.py"
+    "path": "../lib/add_graphql_test.py"
   },
   "inputSchema": {
     "type": "object",

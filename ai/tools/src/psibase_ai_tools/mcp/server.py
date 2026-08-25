@@ -5,27 +5,13 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 
-from psibase_ai_tools.project_profile import ProjectProfile, packaged_default_profile
-
 from . import jobs as _jobs
 from . import resources, tools_async
-from .paths import detect_workspace_root
 from .schemas import description_for, load_definition
 from .tools_sync import SYNC_TOOLS, call_sync_tool
 
 
-def _resolve_profile() -> ProjectProfile:
-    try:
-        from psibase_ai_tools.project_profile import load_profile
-
-        ws = detect_workspace_root({})
-        return load_profile(ws)
-    except Exception:
-        return packaged_default_profile()
-
-
-def server_name_for_profile(profile: ProjectProfile | None = None) -> str:
-    return (profile or _resolve_profile()).mcp_server_name
+SERVER_NAME = "psibase-mcp"
 
 
 def _json_content(payload: dict[str, Any]) -> list[types.TextContent]:
@@ -80,167 +66,143 @@ def _tool(name: str, description: str, input_schema: dict[str, Any]) -> types.To
     return types.Tool(name=name, description=description, inputSchema=input_schema)
 
 
-def tool_specs(profile: ProjectProfile | None = None) -> list[types.Tool]:
-    profile = profile or _resolve_profile()
-    specs: list[types.Tool] = []
+def tool_specs() -> list[types.Tool]:
+    full_build = load_definition("run_full_build")
+    package_build = load_definition("build_package")
+    rust_build = load_definition("build_rust_service")
+    service_tests = load_definition("run_service_tests")
+    launch_chain = load_definition("launch_chain")
+    resume_chain = load_definition("resume_chain")
 
-    if "build" in profile.mcp_tool_families_enabled:
-        full_build = load_definition("run_full_build")
-        package_build = load_definition("build_package")
-        rust_build = load_definition("build_rust_service")
-        specs.extend(
-            [
-                _tool(
-                    "start_full_build",
-                    description_for(
-                        full_build,
-                        mcp_name="start_full_build",
-                        extra="Starts the profile-defined full build asynchronously. Poll with get_build_status and inspect output with get_build_logs.",
-                    ),
-                    full_build["inputSchema"],
-                ),
-                _tool(
-                    "start_package_build",
-                    description_for(
-                        package_build,
-                        mcp_name="start_package_build",
-                        extra="Starts make for one package target asynchronously.",
-                    ),
-                    package_build["inputSchema"],
-                ),
-                _tool(
-                    "start_rust_service_build",
-                    description_for(
-                        rust_build,
-                        mcp_name="start_rust_service_build",
-                        extra="Starts cargo-psibase build for a Rust service asynchronously.",
-                    ),
-                    rust_build["inputSchema"],
-                ),
-                _tool(
-                    "get_build_status",
-                    "Read async build job state for a job_id returned by start_*_build.",
-                    _job_id_schema(),
-                ),
-                _tool(
-                    "get_build_logs",
-                    "Read stdout or stderr slices for an async build job.",
-                    _logs_schema(),
-                ),
-                _tool(
-                    "cancel_build",
-                    "Cancel a running async build job.",
-                    _cancel_schema(),
-                ),
-            ]
-        )
+    specs: list[types.Tool] = [
+        _tool(
+            "start_full_build",
+            description_for(
+                full_build,
+                mcp_name="start_full_build",
+                extra="Starts the canonical full build (cmake configure if needed, then make) asynchronously. Poll with get_build_status and inspect output with get_build_logs.",
+            ),
+            full_build["inputSchema"],
+        ),
+        _tool(
+            "start_package_build",
+            description_for(
+                package_build,
+                mcp_name="start_package_build",
+                extra="Starts make for one package target asynchronously.",
+            ),
+            package_build["inputSchema"],
+        ),
+        _tool(
+            "start_rust_service_build",
+            description_for(
+                rust_build,
+                mcp_name="start_rust_service_build",
+                extra="Starts cargo-psibase build for a Rust service asynchronously.",
+            ),
+            rust_build["inputSchema"],
+        ),
+        _tool(
+            "get_build_status",
+            "Read async build job state for a job_id returned by start_*_build.",
+            _job_id_schema(),
+        ),
+        _tool(
+            "get_build_logs",
+            "Read stdout or stderr slices for an async build job.",
+            _logs_schema(),
+        ),
+        _tool(
+            "cancel_build",
+            "Cancel a running async build job.",
+            _cancel_schema(),
+        ),
+        _tool(
+            "start_service_tests",
+            description_for(
+                service_tests,
+                mcp_name="start_service_tests",
+                extra="Starts service tests asynchronously.",
+            ),
+            service_tests["inputSchema"],
+        ),
+        _tool(
+            "get_test_status",
+            "Read async service-test job state for a job_id returned by start_service_tests.",
+            _job_id_schema(),
+        ),
+        _tool(
+            "get_test_logs",
+            "Read stdout or stderr slices for an async service-test job.",
+            _logs_schema(),
+        ),
+        _tool(
+            "cancel_tests",
+            "Cancel a running async service-test job.",
+            _cancel_schema(),
+        ),
+        _tool(
+            "launch_chain",
+            description_for(launch_chain, mcp_name="launch_chain", extra="Starts psinode asynchronously."),
+            launch_chain["inputSchema"],
+        ),
+        _tool(
+            "resume_chain",
+            description_for(resume_chain, mcp_name="resume_chain", extra="Resumes psinode asynchronously."),
+            resume_chain["inputSchema"],
+        ),
+        _tool(
+            "get_chain_status",
+            "Read async chain job state.",
+            _job_id_schema(),
+        ),
+        _tool(
+            "get_chain_logs",
+            "Read stdout or stderr slices for an async chain job.",
+            _logs_schema(),
+        ),
+        _tool(
+            "cancel_chain",
+            "Cancel a running async chain job.",
+            _cancel_schema(),
+        ),
+    ]
 
-    if "test" in profile.mcp_tool_families_enabled:
-        service_tests = load_definition("run_service_tests")
-        specs.extend(
-            [
-                _tool(
-                    "start_service_tests",
-                    description_for(
-                        service_tests,
-                        mcp_name="start_service_tests",
-                        extra="Starts service tests asynchronously for the active profile.",
+    for name in sorted(SYNC_TOOLS):
+        specs.append(
+            _tool(
+                name,
+                description_for(
+                    load_definition(name),
+                    mcp_name=name,
+                    extra=(
+                        "Runs psibase boot synchronously against api_url."
+                        if name == "boot_chain"
+                        else "Returns a generated Rust test snippet synchronously."
                     ),
-                    service_tests["inputSchema"],
                 ),
-                _tool(
-                    "get_test_status",
-                    "Read async service-test job state for a job_id returned by start_service_tests.",
-                    _job_id_schema(),
-                ),
-                _tool(
-                    "get_test_logs",
-                    "Read stdout or stderr slices for an async service-test job.",
-                    _logs_schema(),
-                ),
-                _tool(
-                    "cancel_tests",
-                    "Cancel a running async service-test job.",
-                    _cancel_schema(),
-                ),
-            ]
-        )
-
-    if "chain" in profile.mcp_tool_families_enabled:
-        launch_chain = load_definition("launch_chain")
-        resume_chain = load_definition("resume_chain")
-        specs.extend(
-            [
-                _tool(
-                    "launch_chain",
-                    description_for(launch_chain, mcp_name="launch_chain", extra="Starts psinode asynchronously."),
-                    launch_chain["inputSchema"],
-                ),
-                _tool(
-                    "resume_chain",
-                    description_for(resume_chain, mcp_name="resume_chain", extra="Resumes psinode asynchronously."),
-                    resume_chain["inputSchema"],
-                ),
-                _tool(
-                    "get_chain_status",
-                    "Read async chain job state.",
-                    _job_id_schema(),
-                ),
-                _tool(
-                    "get_chain_logs",
-                    "Read stdout or stderr slices for an async chain job.",
-                    _logs_schema(),
-                ),
-                _tool(
-                    "cancel_chain",
-                    "Cancel a running async chain job.",
-                    _cancel_schema(),
-                ),
-            ]
-        )
-
-    if "knowledge" in profile.mcp_tool_families_enabled:
-        specs.extend(
-            [
-                _tool(
-                    name,
-                    description_for(
-                        load_definition(name),
-                        mcp_name=name,
-                        extra=(
-                            "Runs psibase boot synchronously against api_url."
-                            if name == "boot_chain"
-                            else "Returns a generated Rust test snippet synchronously."
-                        ),
-                    ),
-                    load_definition(name)["inputSchema"],
-                )
-                for name in sorted(SYNC_TOOLS)
-            ]
+                load_definition(name)["inputSchema"],
+            )
         )
 
     return specs
 
 
-def build_server(profile: ProjectProfile | None = None) -> Server:
-    profile = profile or _resolve_profile()
-    server = Server(server_name_for_profile(profile))
-    build_starters = tools_async.build_starters_for_profile(profile)
-    chain_starters = tools_async.chain_starters_for_profile(profile)
-    test_enabled = "test" in profile.mcp_tool_families_enabled
+def build_server() -> Server:
+    server = Server(SERVER_NAME)
 
     @server.list_tools()
     async def list_tools() -> list[types.Tool]:
-        return tool_specs(profile)
+        return tool_specs()
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent]:
         try:
-            if name in build_starters:
+            if name in tools_async.BUILD_STARTERS:
                 return _json_content(tools_async.start_build(name, arguments))
-            if name == "start_service_tests" and test_enabled:
+            if name == "start_service_tests":
                 return _json_content(tools_async.start_tests(arguments))
-            if name in chain_starters:
+            if name in tools_async.CHAIN_STARTERS:
                 return _json_content(tools_async.start_chain(name, arguments))
             if name in {"get_build_status", "get_test_status", "get_chain_status"}:
                 return _json_content(tools_async.status(str((arguments or {})["job_id"])))
@@ -248,7 +210,7 @@ def build_server(profile: ProjectProfile | None = None) -> Server:
                 return _json_content(tools_async.logs(arguments))
             if name in {"cancel_build", "cancel_tests", "cancel_chain"}:
                 return _json_content(tools_async.cancel(arguments))
-            if name in SYNC_TOOLS and "knowledge" in profile.mcp_tool_families_enabled:
+            if name in SYNC_TOOLS:
                 return _json_content(call_sync_tool(name, arguments))
         except ValueError as exc:
             msg = str(exc)
