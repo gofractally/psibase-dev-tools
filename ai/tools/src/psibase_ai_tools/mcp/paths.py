@@ -124,8 +124,20 @@ def normalize_arguments(
     return normalized
 
 
-def activated_subprocess_env() -> dict[str, str]:
+def activated_subprocess_env(workspace_root: str | Path | None = None) -> dict[str, str]:
+    from .workspace_toolchain_env import merge_env, resolve_workspace_toolchain_env
+
     env = dict(os.environ)
+    ws = (
+        Path(str(workspace_root)).expanduser().resolve()
+        if workspace_root
+        else _host_workspace_root()
+    )
+    if (ws / "packages" / "Cargo.toml").is_file():
+        env = merge_env(env, resolve_workspace_toolchain_env(ws))
+        env["WORKSPACE_ROOT"] = str(ws)
+        env.setdefault("PSIBASE_ROOT", str(ws))
+
     env["AI_DEV_TOOL_ACTIVE"] = "1"
     env["AI_DEV_TOOL_ACTIVE_BY"] = "mcp"
     if GUARDS_DIR.is_dir():

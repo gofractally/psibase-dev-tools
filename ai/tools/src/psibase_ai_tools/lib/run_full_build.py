@@ -14,6 +14,7 @@ from . import locks
 from ._streaming import stream_subprocess
 from .build_diagnostics import count_build_diagnostics
 from .workspace_root import detect_workspace_root
+from psibase_ai_tools.mcp.workspace_toolchain_env import missing_toolchain_bins
 
 BUILD_LOCK_SUFFIX = ".ai-tools-build.lock"
 
@@ -192,7 +193,11 @@ def main() -> int:
         ],
     )
 
-    if shutil.which("make") is None or shutil.which("cmake") is None:
+    build_script = os.path.join(workspace_root, ".editor-shared", "scripts", "build.sh")
+    use_build_script = os.path.isfile(build_script)
+    required_bins = ["bash", "cmake", "make"] if use_build_script else ["cmake", "make"]
+    missing = missing_toolchain_bins(required_bins, os.environ)
+    if missing:
         result = base_result(
             status="error",
             ok=False,
@@ -201,7 +206,13 @@ def main() -> int:
             configured_this_run=False,
             jobs=jobs,
             command_sequence=[],
-            summary="Required build tools (cmake/make) are not available.",
+            summary=(
+                "Required build tools are not available in the MCP job environment: "
+                + ", ".join(missing)
+                + ". For Nix workspaces, open the psibase repo in Cursor so "
+                + "`.direnv/cursor-session-env.json` is populated; for Docker, "
+                + "run inside psibase-contributor."
+            ),
             error_code="environment_missing",
             error_category="environment",
             stdout="",
@@ -274,6 +285,60 @@ def main() -> int:
         return 1
 
     try:
+        if use_build_script:
+            ncpu = os.cpu_count() or 1
+            cores_divisor = max(1, ncpu // jobs)
+            build_cmd = ["bash", build_script, str(cores_divisor)]
+            commands.append(build_cmd)
+            build = run_command(
+                build_cmd,
+                workspace_root,
+                section_header=(
+                    f"\n===== run_full_build: bash {os.path.relpath(build_script, workspace_root)} "
+                    f"{cores_divisor} =====\n$ {' '.join(build_cmd)}"
+                ),
+            )
+            out_parts.append(build.stdout)
+            err_parts.append(build.stderr)
+            if build.returncode != 0:
+                result = base_result(
+                    status="failed",
+                    ok=False,
+                    workspace_root=workspace_root,
+                    build_dir=build_dir,
+                    configured_this_run=True,
+                    jobs=jobs,
+                    command_sequence=commands,
+                    summary="Full build failed.",
+                    error_code="build_failed",
+                    error_category="build_execution",
+                    stdout="\n".join(out_parts),
+                    stderr="\n".join(err_parts),
+                    exit_code=build.returncode,
+                    duration_seconds=time.monotonic() - start,
+                )
+                print(json.dumps(result, indent=2))
+                return 1
+
+            result = base_result(
+                status="passed",
+                ok=True,
+                workspace_root=workspace_root,
+                build_dir=build_dir,
+                configured_this_run=True,
+                jobs=jobs,
+                command_sequence=commands,
+                summary="Full baseline build completed successfully.",
+                error_code=None,
+                error_category=None,
+                stdout="\n".join(out_parts),
+                stderr="\n".join(err_parts),
+                exit_code=build.returncode,
+                duration_seconds=time.monotonic() - start,
+            )
+            print(json.dumps(result, indent=2))
+            return 0
+
         cmake_cache = os.path.join(build_dir, "CMakeCache.txt")
         if not os.path.isfile(cmake_cache):
             if not configure_if_needed:

@@ -5,6 +5,12 @@
   "version": "0.1.0",
   "publisher": "psibase",
   "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gofractally/psibase-dev-tools.git",
+    "directory": "extensions/vscode"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },

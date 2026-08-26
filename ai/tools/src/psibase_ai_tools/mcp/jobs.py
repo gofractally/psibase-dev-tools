@@ -224,7 +224,7 @@ def start_tool_job(tool_name: str, arguments: dict[str, Any], *, family: str) ->
         "result": None,
     }
     write_state(job_id, state)
-    env = activated_subprocess_env()
+    env = activated_subprocess_env(workspace_root=workspace_root)
     env["AI_DEV_MCP_JOB_ID"] = job_id
     proc = subprocess.Popen(command, cwd=str(PACKAGE_ROOT), env=env, start_new_session=True)
     state["status"] = "running"

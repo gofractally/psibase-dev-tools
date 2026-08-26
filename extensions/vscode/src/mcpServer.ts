@@ -16,6 +16,7 @@ import {
 const execFileAsync = promisify(execFile);
 
 const MCP_SERVER_NAME = "psibase-mcp";
+const MCP_OUTPUT_CHANNEL = "Psibase DX Tools MCP";
 
 type CursorMcpApi = {
   registerServer: (config: {
@@ -42,6 +43,22 @@ function getCursorMcp(): CursorMcpApi | undefined {
     return undefined;
   }
   return cursor.mcp as CursorMcpApi;
+}
+
+let mcpOutputChannel: vscode.OutputChannel | undefined;
+
+function mcpLog(message: string): void {
+  mcpOutputChannel ??= vscode.window.createOutputChannel(MCP_OUTPUT_CHANNEL);
+  mcpOutputChannel.appendLine(message);
+}
+
+async function notifyMcpToolsChanged(): Promise<void> {
+  // Cursor listens for this after dynamic MCP registration changes.
+  try {
+    await vscode.commands.executeCommand("mcp.toolListChanged");
+  } catch {
+    // Best-effort; not all Cursor builds expose the command.
+  }
 }
 
 export function resolveAiToolsPackageRoot(
@@ -165,7 +182,12 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
 
   const sync = async () => {
     const mcp = getCursorMcp();
-    if (!mcp) return;
+    if (!mcp) {
+      mcpLog(
+        "Cursor MCP API unavailable; psibase-mcp was not registered. Use a Cursor build that supports vscode.cursor.mcp.",
+      );
+      return;
+    }
 
     if (!hasPsibaseWorkspace()) {
       unregister();
@@ -196,6 +218,9 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
           )
         : ensureVenv(context, packageRoot);
       const { python, stateDir } = await setup;
+      const workspaceRoots = findPsibaseWorkspaceFolders().map(
+        (folder) => folder.uri.fsPath,
+      );
       // Re-register so extension upgrades replace prior command/env.
       unregister();
       mcp.registerServer({
@@ -208,14 +233,18 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
             // Binds this window's server to its psibase folder(s); the Python
             // side (detect_workspace_root) reads this ahead of WORKSPACE_ROOT
             // and CWD, so parallel worktrees / windows stay isolated.
-            MCP_WORKSPACE_ROOTS: JSON.stringify(
-              findPsibaseWorkspaceFolders().map(
-                (folder) => folder.uri.fsPath,
-              ),
-            ),
+            MCP_WORKSPACE_ROOTS: JSON.stringify(workspaceRoots),
+            // Bust Cursor's MCP config cache so a window reload reconnects and
+            // re-runs tools/list instead of reusing a stale "connected" session
+            // with zero tools registered (seen after extension host restarts).
+            PSIBASE_MCP_REGISTRATION_EPOCH: String(Date.now()),
           },
         },
       });
+      mcpLog(
+        `Registered ${MCP_SERVER_NAME} (${python}) for workspace roots: ${workspaceRoots.join(", ")}`,
+      );
+      await notifyMcpToolsChanged();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       void vscode.window.showErrorMessage(

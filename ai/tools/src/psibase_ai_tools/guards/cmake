@@ -15,5 +15,11 @@ while IFS= read -r candidate; do
     fi
 done < <(type -aP cmake)
 
+for candidate in /usr/bin/cmake /usr/local/bin/cmake; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
 echo "ERROR: Unable to locate the real cmake binary on PATH." >&2
 exit 127

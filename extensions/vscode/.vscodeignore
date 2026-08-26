@@ -1,0 +1,20 @@
+# Packaging manifest for vsce. NOTE: without this file vsce falls back to
+# .gitignore, which excludes ai-tools/ (the synced Python package) and would
+# produce a broken VSIX.
+
+.vscodeignore
+src/**
+scripts/**
+tsconfig.json
+**/*.map
+
+# Dev-only npm artifacts (keep production dependencies like @iarna/toml)
+node_modules/@types/**
+node_modules/typescript/**
+
+# ai-tools dev/test artifacts (the package source itself must be included)
+ai-tools/tests/**
+ai-tools/.venv/**
+ai-tools/**/__pycache__/**
+ai-tools/**/*.egg-info/**
+ai-tools/.pytest_cache/**

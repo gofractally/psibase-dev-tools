@@ -13,6 +13,7 @@ from . import locks
 from ._streaming import stream_subprocess
 from .build_diagnostics import count_build_diagnostics
 from .workspace_root import detect_workspace_root
+from psibase_ai_tools.mcp.workspace_toolchain_env import missing_toolchain_bins
 
 BUILD_LOCK_SUFFIX = ".ai-tools-build.lock"
 
@@ -157,7 +158,7 @@ def main() -> int:
     jobs = data.get("jobs", default_jobs())
     command = ["make", make_target, f"-j{jobs}"]
 
-    if shutil.which("make") is None:
+    if missing_toolchain_bins(["make"], os.environ):
         out = result_obj(
             ok=False,
             status="error",

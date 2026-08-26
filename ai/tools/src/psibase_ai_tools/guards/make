@@ -15,5 +15,11 @@ while IFS= read -r candidate; do
     fi
 done < <(type -aP make)
 
+for candidate in /usr/bin/make /usr/local/bin/make; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
 echo "ERROR: Unable to locate the real make binary on PATH." >&2
 exit 127
