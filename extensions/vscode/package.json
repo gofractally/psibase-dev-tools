@@ -2,8 +2,8 @@
   "name": "psibase",
   "displayName": "Psibase DX Tools",
   "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers, AI rules, and MCP build/test/chain tools",
-  "version": "0.1.0",
-  "publisher": "psibase",
+  "version": "0.1.2",
+  "publisher": "fractally",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
@@ -14,7 +14,10 @@
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Linters", "Other"],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
   "activationEvents": [
     "workspaceContains:**/packages/Cargo.toml"
   ],
@@ -23,8 +26,12 @@
     "languages": [
       {
         "id": "wit",
-        "aliases": ["WebAssembly Interface Type"],
-        "extensions": [".wit"]
+        "aliases": [
+          "WebAssembly Interface Type"
+        ],
+        "extensions": [
+          ".wit"
+        ]
       }
     ],
     "commands": [

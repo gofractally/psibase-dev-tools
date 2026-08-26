@@ -62,3 +62,13 @@ npm run compile   # syncs ../../ai/tools into ./ai-tools, then tsc
 ```
 
 Then **Developer: Install Extension from Location...** → select `extensions/vscode`.
+
+# Publishing Extension
+Ensure nodejs 22 is available
+`nix-shell -p nodejs_22`
+Then install, bump version, package, publish
+`npx @vscode/vsce login fractally`
+`npx install`
+`npx bump patch`
+`npx @vscode/vsce package`
+`npx @vscode/vsce publish`
