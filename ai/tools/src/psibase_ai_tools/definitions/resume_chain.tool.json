@@ -1,0 +1,66 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "resume_chain",
+  "version": "1.0.0",
+  "description": "Start psinode on the existing db directory (continue block production). Optionally boot is not run; use boot_chain if the chain is unbooted.",
+  "executor": {
+    "type": "python",
+    "path": "../lib/resume_chain.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "workspace_root": {
+        "type": "string",
+        "description": "psibase repository root (contains db/). Defaults to (in order) explicit value, MCP_WORKSPACE_ROOTS, WORKSPACE_ROOT, CWD."
+      },
+      "db_dir": {
+        "type": "string",
+        "description": "Directory psinode uses for chain state. Defaults to <workspace_root>/db. Must match the db_dir used by the prior launch_chain so resume picks up the right chain."
+      },
+      "admin_ip": {
+        "type": "string",
+        "default": "127.0.0.1"
+      },
+      "producer": {
+        "type": "string",
+        "default": "myprod"
+      },
+      "listen_port": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535,
+        "default": 8080
+      },
+      "api_url": {
+        "type": "string",
+        "description": "Base URL for readiness checks (GET /native/admin/status). Defaults to http://psibase.localhost:8080/."
+      },
+      "http_host": {
+        "type": "string",
+        "default": "psibase.localhost"
+      },
+      "psinode_path": {
+        "type": "string"
+      },
+      "psibase_path": {
+        "type": "string"
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": true
+  },
+  "errors": [
+    {
+      "code": "resource_busy",
+      "description": "Another psinode job already holds the lock on db_dir. Use the holder PID/job_id surfaced in the result to investigate, or pass a distinct db_dir."
+    },
+    {
+      "code": "port_in_use",
+      "description": "Pre-flight TCP bind on listen_port failed. Pass a distinct listen_port (and matching api_url / http_host) or stop the process currently holding the port. There is a small race between probe and psinode launch; if another process binds in between, psinode itself will report the same condition."
+    }
+  ]
+}

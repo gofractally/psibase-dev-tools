@@ -1,0 +1,273 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "run_service_tests",
+  "version": "1.0.0",
+  "description": "Run a psibase service test suite via cargo psibase test and return typed test report stats.",
+  "executor": {
+    "type": "python",
+    "path": "../lib/run_service_tests.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "service_manifest_path"
+    ],
+    "properties": {
+      "service_manifest_path": {
+        "type": "string",
+        "description": "Absolute path to a psibase service Cargo.toml."
+      },
+      "test_filter": {
+        "type": "string",
+        "description": "Optional substring passed as TEST_NAME to cargo psibase test."
+      },
+      "target_dir": {
+        "type": "string",
+        "description": "Optional cargo target dir override."
+      },
+      "psitest_path": {
+        "type": "string",
+        "description": "Optional explicit path to psitest binary. When omitted, the tool auto-detects psitest from PATH or common psibase build outputs such as build/psidk/bin/psitest."
+      },
+      "assert_nonzero_tests": {
+        "type": "boolean",
+        "default": true,
+        "description": "Treat zero discovered tests as an error when true."
+      },
+      "workspace_root": {
+        "type": "string",
+        "description": "Working directory for running cargo-psibase; defaults to the directory containing service_manifest_path when omitted."
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "command",
+      "service_manifest_path",
+      "test_filter",
+      "zero_tests"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "run_service_tests"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "passed",
+          "failed",
+          "aborted",
+          "error"
+        ]
+      },
+      "command": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "service_manifest_path": {
+        "type": "string"
+      },
+      "test_filter": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "stats": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "additionalProperties": false,
+        "required": [
+          "tests_discovered",
+          "tests_passed",
+          "tests_failed",
+          "tests_ignored",
+          "tests_measured",
+          "tests_filtered_out"
+        ],
+        "properties": {
+          "tests_discovered": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests_passed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests_failed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests_ignored": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests_measured": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tests_filtered_out": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "test_binaries": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "binary",
+            "stats",
+            "summary_line"
+          ],
+          "properties": {
+            "binary": {
+              "type": "string"
+            },
+            "stats": {
+              "$ref": "#/properties/stats"
+            },
+            "summary_line": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "passed",
+                "failed"
+              ]
+            },
+            "duration_seconds": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "summary_line": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "duration_seconds": {
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "zero_tests": {
+        "type": "boolean"
+      },
+      "summary": {
+        "type": "string"
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "error_category": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "failure_excerpt": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "last_test_started": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "tests_started_hint": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "minimum": 0
+      },
+      "lookup_hint": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "description": "Suggested lookup query keywords for known failure patterns."
+      },
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      },
+      "exit_code": {
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed schema or required value checks."
+    },
+    {
+      "code": "invalid_manifest_path",
+      "description": "service_manifest_path does not exist or is not a file."
+    },
+    {
+      "code": "unsupported_manifest",
+      "description": "Manifest is not a psibase service crate (missing server metadata)."
+    },
+    {
+      "code": "missing_psitest",
+      "description": "psitest path was requested but is missing or not executable."
+    },
+    {
+      "code": "environment_missing",
+      "description": "Required executable like cargo is missing."
+    },
+    {
+      "code": "build_failed",
+      "description": "Build phase failed before tests completed."
+    },
+    {
+      "code": "test_failed",
+      "description": "Tests completed and reported one or more failures."
+    },
+    {
+      "code": "test_run_aborted",
+      "description": "Test execution started but aborted before a final summary line."
+    },
+    {
+      "code": "zero_tests_discovered",
+      "description": "Test command succeeded but discovered zero runnable tests."
+    }
+  ]
+}

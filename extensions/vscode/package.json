@@ -1,24 +1,37 @@
 {
   "name": "psibase",
   "displayName": "Psibase DX Tools",
-  "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers and AI contributor/dev rules",
-  "version": "0.1.0",
-  "publisher": "psibase",
+  "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers, AI rules, and MCP build/test/chain tools",
+  "version": "0.1.2",
+  "publisher": "fractally",
   "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gofractally/psibase-dev-tools.git",
+    "directory": "extensions/vscode"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Linters", "Other"],
+  "categories": [
+    "Linters",
+    "Other"
+  ],
   "activationEvents": [
-    "workspaceContains:**/Cargo.toml"
+    "workspaceContains:**/packages/Cargo.toml"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
       {
         "id": "wit",
-        "aliases": ["WebAssembly Interface Type"],
-        "extensions": [".wit"]
+        "aliases": [
+          "WebAssembly Interface Type"
+        ],
+        "extensions": [
+          ".wit"
+        ]
       }
     ],
     "commands": [
@@ -93,8 +106,10 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "sync-ai-tools": "node ./scripts/sync-ai-tools.mjs",
+    "compile": "npm run sync-ai-tools && tsc -p ./",
+    "watch": "npm run sync-ai-tools && tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

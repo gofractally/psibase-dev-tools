@@ -1,0 +1,17 @@
+---
+description: Prefer psibase-mcp tools for builds, tests, and local chain
+alwaysApply: true
+---
+
+# psibase Builds, Tests, And Local Chain
+
+Use the **psibase-mcp** tools (provided by the Psibase DX Tools extension) for psibase build, test, and local chain tasks. Prefer these over constructing shell commands.
+
+- For a full repo build, use `start_full_build`, poll with `get_build_status`, and inspect output with `get_build_logs`.
+- For one package target, use `start_package_build`, poll with `get_build_status`, and inspect output with `get_build_logs`.
+- For Rust service or query-service builds, use `start_rust_service_build`, then `get_build_status` / `get_build_logs`.
+- For service tests, use `start_service_tests`, then `get_test_status` / `get_test_logs`.
+- For a local node: use `launch_chain` or `resume_chain`, then `get_chain_status` / `get_chain_logs`; use `cancel_chain` to stop.
+- For generated psibase test snippets, use `add_rust_test_logging`, `add_service_action_test`, or `add_graphql_test`.
+
+Do not run raw `make`, `cmake`, `cargo`, or `ctest` commands for these tasks unless the user explicitly asks for a raw shell command or the MCP server is unavailable. If the MCP tool fails, report the MCP result and ask before falling back to shell.

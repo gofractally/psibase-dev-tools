@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+    echo "ERROR: Direct 'make' invocation is not permitted outside ai-tools managed runs." >&2
+    echo "Use: ai-tools run build_package or ai-tools run run_full_build." >&2
+    exit 97
+fi
+
+# Exec the next 'make' on PATH, skipping this guard directory.
+guard_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+while IFS= read -r candidate; do
+    if [[ "$(cd "$(dirname "$candidate")" && pwd)" != "$guard_dir" ]]; then
+        exec "$candidate" "$@"
+    fi
+done < <(type -aP make)
+
+for candidate in /usr/bin/make /usr/local/bin/make; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
+echo "ERROR: Unable to locate the real make binary on PATH." >&2
+exit 127

@@ -1,0 +1,102 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "add_graphql_test",
+  "version": "1.0.0",
+  "description": "Generate a Rust GraphQL test template for psibase service test suites.",
+  "executor": {
+    "type": "python",
+    "path": "../lib/add_graphql_test.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "package_name",
+      "test_name",
+      "graphql_query_name",
+      "graphql_query_body"
+    ],
+    "properties": {
+      "package_name": {
+        "type": "string"
+      },
+      "test_name": {
+        "type": "string"
+      },
+      "graphql_query_name": {
+        "type": "string"
+      },
+      "graphql_query_body": {
+        "type": "string"
+      },
+      "graphql_service_constant": {
+        "type": "string",
+        "default": "Wrapper::SERVICE"
+      },
+      "seed_calls": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "result_assertions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "ok",
+      "tool",
+      "status",
+      "test_name",
+      "snippet",
+      "line_by_line_why"
+    ],
+    "properties": {
+      "ok": {
+        "type": "boolean"
+      },
+      "tool": {
+        "type": "string",
+        "const": "add_graphql_test"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "error"
+        ]
+      },
+      "test_name": {
+        "type": "string"
+      },
+      "snippet": {
+        "type": "string"
+      },
+      "line_by_line_why": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "error_code": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed validation."
+    }
+  ]
+}

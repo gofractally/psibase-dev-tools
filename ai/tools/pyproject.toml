@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psibase-ai-tools"
+version = "0.1.0"
+description = "Psibase build, test, chain, and MCP tools for coding agents"
+requires-python = ">=3.10"
+dependencies = ["mcp>=1.6,<2", "PyYAML>=6,<7"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9"]
+
+[project.scripts]
+ai-tools = "psibase_ai_tools.cli:main"
+ai-tools-mcp = "psibase_ai_tools.mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+psibase_ai_tools = ["definitions/*.json", "guards/*"]

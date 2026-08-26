@@ -1,0 +1,50 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "boot_chain",
+  "version": "1.0.0",
+  "description": "Run psibase boot -a <api_url> -p <producer> against an already-running unbooted node.",
+  "executor": {
+    "type": "python",
+    "path": "../lib/boot_chain.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "workspace_root": {
+        "type": "string"
+      },
+      "api_url": {
+        "type": "string",
+        "description": "Full HTTP URL for psibase boot -a (e.g. http://psibase.localhost:8080/). Use a hostname that supports per-service subdomains (psibase boot constructs URLs like accounts.<host>); plain IPs like 127.0.0.1 will fail with DNS errors."
+      },
+      "http_host": {
+        "type": "string",
+        "description": "Host used with listen_port when api_url is omitted. Must support per-service subdomains.",
+        "default": "psibase.localhost"
+      },
+      "listen_port": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535,
+        "default": 8080
+      },
+      "producer": {
+        "type": "string",
+        "default": "myprod"
+      },
+      "admin_ip": {
+        "type": "string",
+        "description": "If set, adds PSIBASE_ADMIN_IP for the boot subprocess."
+      },
+      "psibase_path": {
+        "type": "string"
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": true
+  },
+  "errors": []
+}

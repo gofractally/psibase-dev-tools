@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+    echo "ERROR: Direct 'cargo-psibase' invocation is not permitted outside ai-tools managed runs." >&2
+    echo "Use: ai-tools run <tool_name> (for example: ai-tools run run_service_tests)" >&2
+    exit 97
+fi
+
+# Prefer the workspace's freshly built cargo-psibase when the managed run
+# knows its workspace, so agents exercise the code they just built.
+if [[ -n "${WORKSPACE_ROOT:-}" ]]; then
+    for candidate in \
+        "${WORKSPACE_ROOT}/build/rust/release/cargo-psibase" \
+        "${WORKSPACE_ROOT}/build/rust/debug/cargo-psibase" \
+        "${WORKSPACE_ROOT}/build/bin/cargo-psibase"
+    do
+        if [[ -x "$candidate" ]]; then
+            exec "$candidate" "$@"
+        fi
+    done
+fi
+
+# Otherwise exec the next 'cargo-psibase' on PATH, skipping this guard directory.
+guard_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+while IFS= read -r candidate; do
+    if [[ "$(cd "$(dirname "$candidate")" && pwd)" != "$guard_dir" ]]; then
+        exec "$candidate" "$@"
+    fi
+done < <(type -aP cargo-psibase)
+
+echo "ERROR: Unable to locate the real cargo-psibase binary on PATH or in the workspace build tree." >&2
+exit 127

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${AI_DEV_TOOL_ACTIVE:-0}" != "1" ]]; then
+    echo "ERROR: Direct 'cmake' invocation is not permitted outside ai-tools managed runs." >&2
+    echo "Use: ai-tools run <tool_name> (for example: ai-tools run run_full_build)" >&2
+    exit 97
+fi
+
+# Exec the next 'cmake' on PATH, skipping this guard directory.
+guard_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+while IFS= read -r candidate; do
+    if [[ "$(cd "$(dirname "$candidate")" && pwd)" != "$guard_dir" ]]; then
+        exec "$candidate" "$@"
+    fi
+done < <(type -aP cmake)
+
+for candidate in /usr/bin/cmake /usr/local/bin/cmake; do
+    if [[ -x "$candidate" ]]; then
+        exec "$candidate" "$@"
+    fi
+done
+
+echo "ERROR: Unable to locate the real cmake binary on PATH." >&2
+exit 127

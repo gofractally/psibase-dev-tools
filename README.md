@@ -1,16 +1,17 @@
 # psibase-dev-tools
 
-Extensions, AI rules, and other tooling that supports psibase development — kept out of the primary monorepo.
+Extensions, AI/MCP tooling, and other helpers that support [psibase](https://github.com/gofractally/psibase) development — kept out of the primary monorepo.
 
 ## Layout
 
-| Path | Purpose |
-|------|---------|
-| [`extensions/vscode/`](extensions/vscode/) | **Psibase DX Tools** — extension for VS Code-compatible IDEs |
+| Path                                       | Purpose                                                                  |
+| ------------------------------------------ | ------------------------------------------------------------------------ |
+| [`ai/tools/`](ai/tools/)                   | Portable Python package: build/test/chain tools + MCP stdio server       |
+| [`extensions/vscode/`](extensions/vscode/) | **Psibase DX Tools** — package naming, Cursor AI rules, MCP registration |
 
 ## Install Psibase DX Tools (local)
 
-Not on the Marketplace.
+Not required to keep this repo open after a Marketplace/VSIX install. For local development:
 
 ```bash
 cd extensions/vscode
@@ -22,18 +23,19 @@ Then in your IDE:
 
 1. **Developer: Install Extension from Location...**
 2. Select the `extensions/vscode` folder
-3. Reload the window if the Extensions detail page still looks empty
+3. Reload the window if needed
 
-Features, commands, and settings are documented in the extension README (also shown on the Extensions detail page after install):
+Open a **psibase** workspace. The extension registers **`psibase-mcp`** (Cursor) and package-naming helpers only for that shape of repo.
 
-**[extensions/vscode/README.md](extensions/vscode/README.md)**
+Details: **[extensions/vscode/README.md](extensions/vscode/README.md)**
 
-## Developing the extension
+## AI tools package (developers)
 
 ```bash
-cd extensions/vscode
-npm install
-npm run compile   # or: npm run watch
+cd ai/tools
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest -q
 ```
 
-After code changes, reload the window (**Developer: Reload Window**) so the installed-from-location copy picks up `out/`.
+`npm run compile` in the extension syncs `ai/tools` into `extensions/vscode/ai-tools` so Marketplace/local installs are self-contained.

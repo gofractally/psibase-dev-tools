@@ -1,0 +1,6 @@
+{
+  "name": "psibase-prefer-mcp-tools",
+  "version": "0.1.0",
+  "description": "Prefer psibase-mcp tools over raw make/cmake/cargo/ctest for build, test, and chain",
+  "author": { "name": "psibase" }
+}

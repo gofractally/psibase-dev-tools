@@ -1,0 +1,93 @@
+{
+  "$schema": "./tool-definition.schema.json",
+  "name": "launch_chain",
+  "version": "1.0.0",
+  "description": "Remove the local psibase db directory, start psinode, wait for HTTP admin status, run psibase boot by default, then keep psinode running until it exits.",
+  "executor": {
+    "type": "python",
+    "path": "../lib/launch_chain.py"
+  },
+  "inputSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "workspace_root": {
+        "type": "string",
+        "description": "psibase repository root (contains db/). Defaults to (in order) explicit value, MCP_WORKSPACE_ROOTS, WORKSPACE_ROOT, CWD."
+      },
+      "db_dir": {
+        "type": "string",
+        "description": "Directory psinode uses for chain state. Defaults to <workspace_root>/db. Pass an explicit path when running parallel chains in one worktree, or to keep one chain isolated from another. The wipe step removes only this directory."
+      },
+      "admin_ip": {
+        "type": "string",
+        "description": "Value for PSIBASE_ADMIN_IP when starting psinode.",
+        "default": "127.0.0.1"
+      },
+      "producer": {
+        "type": "string",
+        "description": "Block producer name passed to psinode -p and psibase boot -p.",
+        "default": "myprod"
+      },
+      "listen_port": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535,
+        "description": "HTTP listen port for psinode -l.",
+        "default": 8080
+      },
+      "api_url": {
+        "type": "string",
+        "description": "Full HTTP base URL passed to psibase boot -a (e.g. http://psibase.localhost:8080/). If omitted, defaults to http://{http_host}:{listen_port}/. Use a hostname that supports per-service subdomains (psibase boot constructs URLs like accounts.<host>); plain IPs like 127.0.0.1 will fail because accounts.127.0.0.1 is not a valid DNS name."
+      },
+      "http_host": {
+        "type": "string",
+        "description": "Host used with listen_port when api_url is omitted. Must support per-service subdomains for psibase boot (default psibase.localhost works because *.psibase.localhost resolves to 127.0.0.1).",
+        "default": "psibase.localhost"
+      },
+      "psinode_path": {
+        "type": "string",
+        "description": "Explicit psinode binary. Else PSIBASE_PSINODE, then build/psinode, then PATH."
+      },
+      "psibase_path": {
+        "type": "string",
+        "description": "Explicit psibase binary. Else PSIBASE_PSIBASE, then build/rust/release/psibase, then PATH."
+      },
+      "skip_boot": {
+        "type": "boolean",
+        "description": "If true, only start psinode after wipe; do not run psibase boot.",
+        "default": false
+      }
+    }
+  },
+  "resultSchema": {
+    "type": "object",
+    "additionalProperties": true
+  },
+  "errors": [
+    {
+      "code": "invalid_input",
+      "description": "Input failed validation."
+    },
+    {
+      "code": "environment_missing",
+      "description": "psinode or psibase binary not found."
+    },
+    {
+      "code": "node_not_ready",
+      "description": "Admin status endpoint did not respond in time."
+    },
+    {
+      "code": "boot_failed",
+      "description": "psibase boot returned non-zero."
+    },
+    {
+      "code": "resource_busy",
+      "description": "Another psinode job already holds the lock on db_dir. Use the holder PID/job_id surfaced in the result to investigate, or pass a distinct db_dir."
+    },
+    {
+      "code": "port_in_use",
+      "description": "Pre-flight TCP bind on listen_port failed. Pass a distinct listen_port (and matching api_url / http_host) or stop the process currently holding the port. There is a small race between probe and psinode launch; if another process binds in between, psinode itself will report the same condition."
+    }
+  ]
+}

@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import { registerAiRules } from "./aiRules";
 import { collectContentOverrides, isPackageRelevantDocument } from "./buffers";
 import { PackageGraphService } from "./graph";
+import { registerMcpServer } from "./mcpServer";
+import { findPsibaseWorkspaceFolders } from "./psibaseWorkspace";
 import {
   findCorrelated,
   registerCodeActions,
@@ -14,13 +16,40 @@ import {
   renameEntity,
 } from "./providers";
 
+const EXTENSION_ID = "psibase.psibase";
+
+let disposeExtensionServices: (() => void) | undefined;
+
+function disposeAllExtensionServices(): void {
+  if (!disposeExtensionServices) return;
+  disposeExtensionServices();
+  disposeExtensionServices = undefined;
+}
+
+function watchForExtensionRemoval(): void {
+  // Cursor can remove an extension from the profile without deactivating the
+  // extension host first; unregister MCP/plugins when our id disappears.
+  const disposable = vscode.extensions.onDidChange(() => {
+    if (!vscode.extensions.getExtension(EXTENSION_ID)) {
+      disposeAllExtensionServices();
+      disposable.dispose();
+    }
+  });
+}
+
 export function activate(context: vscode.ExtensionContext): void {
-  registerAiRules(context);
+  const disposeAiRules = registerAiRules(context);
+  const disposeMcp = registerMcpServer(context);
+  disposeExtensionServices = () => {
+    disposeMcp();
+    disposeAiRules();
+  };
+  watchForExtensionRemoval();
 
   const graphs = new PackageGraphService();
 
   const refreshAll = () => {
-    for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    for (const folder of findPsibaseWorkspaceFolders()) {
       graphs.refresh(folder.uri.fsPath, collectContentOverrides());
     }
   };
@@ -76,7 +105,14 @@ export function activate(context: vscode.ExtensionContext): void {
         refreshAll();
       }
     }),
+    {
+      dispose: () => {
+        if (refreshTimer) clearTimeout(refreshTimer);
+      },
+    },
   );
 }
 
-export function deactivate(): void {}
+export function deactivate(): void {
+  disposeAllExtensionServices();
+}
