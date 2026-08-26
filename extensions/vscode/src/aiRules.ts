@@ -118,8 +118,9 @@ async function cleanupLegacyWorkspaceRules(
   }
 }
 
-export function registerAiRules(context: vscode.ExtensionContext): void {
+export function registerAiRules(context: vscode.ExtensionContext): () => void {
   const registered = new Set<string>();
+  let disposed = false;
 
   const clearAll = () => {
     const plugins = getCursorPlugins();
@@ -128,6 +129,12 @@ export function registerAiRules(context: vscode.ExtensionContext): void {
       plugins.unregisterPath(dir);
     }
     registered.clear();
+  };
+
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    clearAll();
   };
 
   const ensureRegistered = (plugins: CursorPluginsApi, dir: string) => {
@@ -145,6 +152,7 @@ export function registerAiRules(context: vscode.ExtensionContext): void {
   };
 
   const sync = () => {
+    if (disposed) return;
     const plugins = getCursorPlugins();
     if (!plugins) return;
 
@@ -181,6 +189,8 @@ export function registerAiRules(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       sync();
     }),
-    { dispose: clearAll },
+    { dispose },
   );
+
+  return dispose;
 }

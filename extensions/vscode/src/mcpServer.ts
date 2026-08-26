@@ -15,7 +15,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 
-const MCP_SERVER_NAME = "psibase-mcp";
+export const MCP_SERVER_NAME = "psibase-mcp";
 const MCP_OUTPUT_CHANNEL = "Psibase DX Tools MCP";
 
 type CursorMcpApi = {
@@ -168,19 +168,41 @@ async function ensureVenv(
   return { python, stateDir };
 }
 
-export function registerMcpServer(context: vscode.ExtensionContext): void {
+/** Unregister the dynamic MCP server from Cursor (safe to call multiple times). */
+export function unregisterMcpServer(): void {
+  const mcp = getCursorMcp();
+  if (!mcp) return;
+  try {
+    // Always attempt unregister so extension upgrades replace a prior session registration.
+    mcp.unregisterServer(MCP_SERVER_NAME);
+  } catch {
+    // Best-effort; Cursor may not have this server registered.
+  }
+}
+
+export function registerMcpServer(context: vscode.ExtensionContext): () => void {
+  let disposed = false;
+  let syncGeneration = 0;
+
   const unregister = () => {
-    const mcp = getCursorMcp();
-    if (!mcp) return;
-    try {
-      // Always attempt unregister so extension upgrades replace a prior session registration.
-      mcp.unregisterServer(MCP_SERVER_NAME);
-    } catch {
-      // Best-effort; Cursor may not have this server registered.
+    unregisterMcpServer();
+    if (mcpOutputChannel) {
+      mcpOutputChannel.dispose();
+      mcpOutputChannel = undefined;
     }
   };
 
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    syncGeneration += 1;
+    unregister();
+  };
+
   const sync = async () => {
+    if (disposed) return;
+    const generation = syncGeneration;
+
     const mcp = getCursorMcp();
     if (!mcp) {
       mcpLog(
@@ -196,9 +218,11 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
 
     const packageRoot = resolveAiToolsPackageRoot(context.extensionPath);
     if (!packageRoot) {
-      void vscode.window.showWarningMessage(
-        "Psibase DX Tools: bundled ai-tools package not found. Run npm run compile in the extension (syncs ai/tools).",
-      );
+      if (!disposed) {
+        void vscode.window.showWarningMessage(
+          "Psibase DX Tools: bundled ai-tools package not found. Run npm run compile in the extension (syncs ai/tools).",
+        );
+      }
       unregister();
       return;
     }
@@ -218,11 +242,15 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
           )
         : ensureVenv(context, packageRoot);
       const { python, stateDir } = await setup;
+      if (disposed || generation !== syncGeneration) return;
+
       const workspaceRoots = findPsibaseWorkspaceFolders().map(
         (folder) => folder.uri.fsPath,
       );
       // Re-register so extension upgrades replace prior command/env.
       unregister();
+      if (disposed || generation !== syncGeneration) return;
+
       mcp.registerServer({
         name: MCP_SERVER_NAME,
         server: {
@@ -246,6 +274,7 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
       );
       await notifyMcpToolsChanged();
     } catch (err) {
+      if (disposed) return;
       const message = err instanceof Error ? err.message : String(err);
       void vscode.window.showErrorMessage(
         `Psibase DX Tools: failed to prepare MCP server: ${message}`,
@@ -260,6 +289,8 @@ export function registerMcpServer(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeWorkspaceFolders(() => {
       void sync();
     }),
-    { dispose: unregister },
+    { dispose },
   );
+
+  return dispose;
 }
