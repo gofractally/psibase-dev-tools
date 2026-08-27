@@ -2,8 +2,8 @@
   "name": "psibase",
   "displayName": "Psibase DX Tools",
   "description": "Psibase development tools for VS Code-compatible IDEs: package naming helpers, AI rules, and MCP build/test/chain tools",
-  "version": "0.1.2",
-  "publisher": "fractally",
+  "version": "0.1.4",
+  "publisher": "gofractally",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {
