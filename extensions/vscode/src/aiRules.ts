@@ -7,8 +7,8 @@ import {
 } from "./psibaseWorkspace";
 
 type CursorPluginsApi = {
-  registerPath: (pluginPath: string) => void;
-  unregisterPath: (pluginPath: string) => void;
+  addPlugin: (plugin: { path: string }) => void;
+  removePlugin: (plugin: { path: string }) => void;
 };
 
 /** Optional contributor/dev rules (settings toggles). */
@@ -26,6 +26,22 @@ const TOGGLEABLE_RULES = [
     setting: "psibasePackage.aiRules.contributors.packageBackendSharedTypes",
   },
   {
+    id: "plugin-tables",
+    setting: "psibasePackage.aiRules.contributors.pluginTables",
+  },
+  {
+    id: "comment-precedent",
+    setting: "psibasePackage.aiRules.contributors.commentPrecedent",
+  },
+  {
+    id: "tests",
+    setting: "psibasePackage.aiRules.contributors.tests",
+  },
+  {
+    id: "no-formatting-only",
+    setting: "psibasePackage.aiRules.contributors.noFormattingOnly",
+  },
+  {
     id: "service-action-failures",
     setting: "psibasePackage.aiRules.devs.serviceActionFailures",
   },
@@ -41,8 +57,8 @@ function getCursorPlugins(): CursorPluginsApi | undefined {
     }
   ).cursor;
   if (
-    typeof cursor?.plugins?.registerPath !== "function" ||
-    typeof cursor?.plugins?.unregisterPath !== "function"
+    typeof cursor?.plugins?.addPlugin !== "function" ||
+    typeof cursor?.plugins?.removePlugin !== "function"
   ) {
     return undefined;
   }
@@ -126,7 +142,7 @@ export function registerAiRules(context: vscode.ExtensionContext): () => void {
     const plugins = getCursorPlugins();
     if (!plugins) return;
     for (const dir of registered) {
-      plugins.unregisterPath(dir);
+      plugins.removePlugin({ path: dir });
     }
     registered.clear();
   };
@@ -139,14 +155,14 @@ export function registerAiRules(context: vscode.ExtensionContext): () => void {
 
   const ensureRegistered = (plugins: CursorPluginsApi, dir: string) => {
     if (!registered.has(dir)) {
-      plugins.registerPath(dir);
+      plugins.addPlugin({ path: dir });
       registered.add(dir);
     }
   };
 
   const ensureUnregistered = (plugins: CursorPluginsApi, dir: string) => {
     if (registered.has(dir)) {
-      plugins.unregisterPath(dir);
+      plugins.removePlugin({ path: dir });
       registered.delete(dir);
     }
   };

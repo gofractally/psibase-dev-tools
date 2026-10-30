@@ -1,0 +1,16 @@
+---
+description: Match local comment style, quantity, presence, and type in every language
+alwaysApply: true
+---
+
+# Comments follow local precedent
+
+This applies to every language. Before adding or rewriting a comment, read the nearest existing code of the same kind in this repo and match what those files already do.
+
+- **Presence.** If those files do not comment that kind of code, do not add one.
+- **Quantity.** Match length. A one-line note stays one line. Do not add a paragraph where the exemplar has a single line or nothing.
+- **Style.** Match the marker and voice those files use (`//`, `///`, `/* */`, JSDoc, `#`, and so on).
+- **Type.** A line comment, a doc comment, and a module doc are different. Use the type the exemplar uses for that spot.
+- **Location.** Put a comment on the function, class, or interface definition, not at a call site, unless that call site is peculiar enough to need its own note. If the nearest existing comments of the same kind sit at call sites, follow that instead.
+
+A comment that explains a mechanism the local files leave unexplained is extra. Leave it out.

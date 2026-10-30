@@ -84,6 +84,26 @@
             "type": "boolean",
             "default": true,
             "description": "Prefer one shared type within a package backend; no parallel DTO mirrors."
+          },
+          "psibasePackage.aiRules.contributors.pluginTables": {
+            "type": "boolean",
+            "default": true,
+            "description": "Match existing plugin client-storage tables when adding host:db buckets."
+          },
+          "psibasePackage.aiRules.contributors.commentPrecedent": {
+            "type": "boolean",
+            "default": true,
+            "description": "Match local comment style, quantity, presence, and type in every language."
+          },
+          "psibasePackage.aiRules.contributors.tests": {
+            "type": "boolean",
+            "default": true,
+            "description": "Tests cover only new behavior, match local tests, and stay current."
+          },
+          "psibasePackage.aiRules.contributors.noFormattingOnly": {
+            "type": "boolean",
+            "default": true,
+            "description": "Do not leave a file changed only by formatting or reordering."
           }
         }
       },

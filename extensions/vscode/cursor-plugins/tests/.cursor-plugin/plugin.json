@@ -1,0 +1,6 @@
+{
+  "name": "psibase-tests",
+  "version": "0.1.0",
+  "description": "Tests cover only new behavior, match local tests, and stay current",
+  "author": { "name": "psibase" }
+}

@@ -25,8 +25,8 @@ declare module "vscode" {
     }
 
     export namespace plugins {
-      export const registerPath: (path: string) => void;
-      export const unregisterPath: (path: string) => void;
+      export const addPlugin: (plugin: { path: string }) => void;
+      export const removePlugin: (plugin: { path: string }) => void;
     }
   }
 }

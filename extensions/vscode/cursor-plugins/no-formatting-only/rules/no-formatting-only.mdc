@@ -1,0 +1,12 @@
+---
+description: Do not leave a file changed only by formatting or reordering
+alwaysApply: true
+---
+
+# Substantive edits only
+
+Modify a file only when the change is substantive. A file whose diff is only formatting is not allowed.
+
+Formatting includes whitespace, line wrapping, and rearranging the same lines, such as import or module order.
+
+When an edit deletes lines, check the diff that remains. If what remains is only formatting or reordering, restore the file.

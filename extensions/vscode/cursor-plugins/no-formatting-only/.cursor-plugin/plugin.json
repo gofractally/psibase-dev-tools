@@ -1,0 +1,6 @@
+{
+  "name": "psibase-no-formatting-only",
+  "version": "0.1.0",
+  "description": "Do not leave a file changed only by formatting or reordering",
+  "author": { "name": "psibase" }
+}
