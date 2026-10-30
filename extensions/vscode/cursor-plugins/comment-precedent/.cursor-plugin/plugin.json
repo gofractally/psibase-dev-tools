@@ -1,0 +1,6 @@
+{
+  "name": "psibase-comment-precedent",
+  "version": "0.1.0",
+  "description": "Match local comment style, quantity, presence, and type in every language",
+  "author": { "name": "psibase" }
+}

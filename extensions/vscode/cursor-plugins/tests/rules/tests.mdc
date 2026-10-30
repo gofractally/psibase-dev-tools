@@ -1,0 +1,28 @@
+---
+description: Tests cover only new behavior, match local tests, and stay current
+alwaysApply: true
+---
+
+# Tests
+
+## Scope
+
+Test only the functionality this change adds. Before writing a test, read the relevant existing tests. If a new test would significantly duplicate one, extend that test instead of adding another.
+
+## Match local tests
+
+Match the style, nature, length, how behavior is split across tests, and which mechanisms those tests use. The nearest tests of the same kind count most.
+
+A divergence is allowed only when it is strictly better than that local pattern. If that is at all questionable, stop and ask. Explain the divergence and why it would be strictly better so the user can decide.
+
+## Keep tests current
+
+Whenever a further relevant change is made, review the tests that cover it. Update them so they still describe the current behavior. Stale or obsolete tests are not acceptable.
+
+## Example
+
+A helper is renamed so a sibling test file can call it, and the behavior under test is unchanged.
+
+- Do not add a new test file for the rename.
+- Do not leave an old test asserting the previous name or shape.
+- Extend the existing test that already exercises that helper, in the same style as the tests next to it.

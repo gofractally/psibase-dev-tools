@@ -1,0 +1,25 @@
+---
+description: Match existing plugin client-storage tables when adding host:db buckets
+globs: "packages/**/plugin/**/*.rs"
+alwaysApply: false
+---
+
+# Plugin tables
+
+When adding or changing client-side storage, copy the nearest existing table. Do not invent a new module shape.
+
+Exemplars:
+
+- Shared bucket used by two plugins of the same service: `packages/system/Accounts/plugin/shared/logged_in_user_table.rs`, included with `#[path]`.
+- Operations on that bucket: `AppsTable` and `AllowedCallers` in `packages/system/Accounts/plugin/accounts/src/db/`.
+- Ephemeral bucket: `current_details` in `packages/user/Invite/plugin/src/db.rs` (`NonTransactional` + `StorageDuration::Ephemeral`).
+
+Required shape:
+
+- A `pub(crate) fn <name>_table() -> Bucket` that only constructs the bucket. One `//` line on that function saying what the rows are and why this duration. No module docs, no `///` on the methods.
+- Record operations live on a unit struct or a small struct (`OpenTx::add_action`), not free functions. Methods are `pub(crate)`.
+- Unpack with `.unwrap()`, matching those files.
+- One bucket with several keys when the rows are one record. A separate `*_table()` only when the namespace differs, as with `logged_in_user` vs `connected_accounts`.
+- A file compiled into two crates may put `#[allow(dead_code)]` on the impl. Do not explain that with a comment.
+
+Policy that only one plugin runs stays in that plugin. Policy both plugins must run, such as flushing a latch, stays on the shared struct.

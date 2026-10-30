@@ -1,0 +1,6 @@
+{
+  "name": "psibase-plugin-tables",
+  "version": "0.1.0",
+  "description": "Match existing plugin client-storage tables when adding host:db buckets",
+  "author": { "name": "psibase" }
+}
