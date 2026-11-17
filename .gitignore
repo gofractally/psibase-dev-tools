@@ -5,3 +5,8 @@ ai/tools/**/__pycache__/
 ai/tools/**/*.pyc
 ai/tools/.pytest_cache/
 *.egg-info/
+
+# Nix
+result
+result-*
+.direnv/
