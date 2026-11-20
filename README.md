@@ -1,6 +1,8 @@
 # psibase-dev-tools
 
-Extensions, AI/MCP tooling, and other helpers that support [psibase](https://github.com/gofractally/psibase) development — kept out of the primary monorepo.
+Extensions, AI/MCP tooling, the Package SDK Nix environment, and other helpers
+that support [psibase](https://github.com/gofractally/psibase) development —
+kept out of the primary monorepo.
 
 ## Layout
 
@@ -8,6 +10,18 @@ Extensions, AI/MCP tooling, and other helpers that support [psibase](https://git
 | ------------------------------------------ | ------------------------------------------------------------------------ |
 | [`ai/tools/`](ai/tools/)                   | Portable Python package: build/test/chain tools + MCP stdio server       |
 | [`extensions/vscode/`](extensions/vscode/) | **Psibase DX Tools** — package naming, Cursor AI rules, MCP registration |
+| [`nix/sdk/`](nix/sdk/)                     | **Package SDK** — `nix develop` for out-of-tree Rust packages             |
+
+## Package SDK (x86_64-linux)
+
+```bash
+nix develop
+# or scaffold a consumer workspace (template lives in the psibase monorepo):
+#   nix flake init -t github:gofractally/psibase#package
+```
+
+Docs: **[nix/sdk/README.md](nix/sdk/README.md)**. Bump the released psidk pin in
+[`nix/release.nix`](nix/release.nix) when moving to a new psibase release.
 
 ## Install Psibase DX Tools (local)
 
