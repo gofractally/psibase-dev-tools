@@ -15,7 +15,7 @@ From an SDK workspace root (directory that contains `packages/Cargo.toml`):
 psiapp new my-app
 # or:
 cargo generate -p "$PSIBASE_PACKAGE_TEMPLATES/sdk-basic-01" --destination ./packages --init \
-  -v --allow-commands --name my-app --define version=0.23.0
+  -v --allow-commands --name my-app --define version=0.29.0
 wit-from-psidk ./packages/MyApp/plugin/wit/deps
 ```
 

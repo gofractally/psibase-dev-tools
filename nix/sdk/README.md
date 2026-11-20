@@ -32,7 +32,7 @@ nix develop
 - Prebuilt `psinode` / `psibase` / `psitest` from `packages.psidk`
 - `cargo-psibase` from the Release tarball when present; otherwise **installed from
   crates.io** at `nix/release.nix` → `cargoPsibaseVersion`
-- Rust 1.86 + wasm targets, cargo-component / cargo-generate / cargo-edit
+- Rust 1.98 + wasm targets, cargo-component / cargo-generate / cargo-edit
 - Node 24 (CVE-patched via nixos-26.05 `nodejs_24`) + Yarn, wasm-pack / wasm-tools / binaryen
 - Flake `wasi-sdk`, mkcert, SoftHSM
 - `PSIBASE_DATADIR` → store `share/psibase` (full package set from the tarball)

@@ -11,7 +11,7 @@
     };
 
     # Fragile cargo tools, each pinned to the exact nixpkgs revision that
-    # packages the required version (Rust 1.86.0 / psibase compatibility).
+    # packages the required version (Rust / psibase compatibility).
     # These deliberately do NOT follow nixpkgs.
     #   cargo-component 0.15.0
     nixpkgs-cargo-component.url = "github:NixOS/nixpkgs/b1e27a8646234340ea2c8b4e3f73e9e2b2bca505";

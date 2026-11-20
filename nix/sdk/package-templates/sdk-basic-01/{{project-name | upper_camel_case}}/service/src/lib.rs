@@ -1,8 +1,8 @@
-//! Example service for the out-of-tree SDK template (psibase 0.23 train).
+//! Example service for the out-of-tree SDK template (psibase 0.29 train).
 //!
 //! Uses a simple action surface (no `service_tables`) so `cargo-psibase package`
-//! schema generation works with cargo-psibase 0.23. Monorepo `basic-01` keeps
-//! the full tables example for the 0.24+ train.
+//! schema generation stays straightforward. Monorepo `basic-01` keeps the full
+//! tables example.
 
 #[psibase::service(name = "{{project-name}}")]
 mod service {
