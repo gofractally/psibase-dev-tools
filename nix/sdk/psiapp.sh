@@ -158,7 +158,7 @@ cmd_new() {
   local PACKAGES_DIR
   PACKAGES_DIR="$(find_packages_dir)" || {
     echo "error: no packages/Cargo.toml found above $(pwd)" >&2
-    echo "  Run from an SDK workspace (flake init -t …#package), or cd into it." >&2
+    echo "  Run from an SDK workspace (flake init -t github:gofractally/psibase#package), or cd into it." >&2
     exit 1
   }
 

@@ -16,8 +16,8 @@ kept out of the primary monorepo.
 
 ```bash
 nix develop
-# or scaffold a consumer workspace:
-#   nix flake init -t .#package
+# or scaffold a consumer workspace (template lives in the psibase monorepo):
+#   nix flake init -t github:gofractally/psibase#package
 ```
 
 Docs: **[nix/sdk/README.md](nix/sdk/README.md)**. Bump the released psidk pin in

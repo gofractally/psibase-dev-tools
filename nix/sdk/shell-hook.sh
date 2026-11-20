@@ -122,7 +122,7 @@ if [ "$NIX_SHELL_DEPTH" -eq 1 ]; then
   echo ""
   echo "  Local chain:  psiapp chain up|down|status"
   echo "  New app:      psiapp new <name>   (scaffold + WIT from psidk)"
-  echo "  Workspace:    nix flake init -t …#package   (see nix/sdk/README.md)"
+  echo "  Workspace:    nix flake init -t github:gofractally/psibase#package"
   echo "  Docs:         nix/sdk/README.md"
   echo ""
 fi

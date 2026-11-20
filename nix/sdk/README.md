@@ -8,8 +8,10 @@ monorepo and without a local `build/` tree. Lives in
 
 ```bash
 mkdir my-apps && cd my-apps
-nix flake init -t github:gofractally/psibase-dev-tools#package
-# Local checkout of this repo:
+nix flake init -t github:gofractally/psibase#package
+# Until the template lands on main:
+#   nix flake init -t github:gofractally/psibase/mm/nix-pkg-dev-prep#package
+# Local bring-up of this SDK shell:
 #   nix flake lock --override-input psibase-dev-tools path:/path/to/psibase-dev-tools
 direnv allow   # or: nix develop
 
@@ -21,7 +23,7 @@ cargo-psibase install -a http://psibase.localhost:8090/
 psiapp chain down
 ```
 
-From this repo directly:
+From this repo directly (SDK shell only — no workspace scaffold):
 
 ```bash
 nix develop
@@ -72,7 +74,9 @@ Runs `cargo-generate` against [`package-templates/`](package-templates/) into
 
 ## Flake template (`#package`)
 
-`nix/sdk/template/` — standalone workspace under `packages/`.
+Workspace scaffold lives in the **psibase monorepo** (`nix/sdk/template/`).
+Instantiate with `nix flake init -t github:gofractally/psibase#package`. The
+generated `flake.nix` pulls this repo’s Package SDK shell.
 
 ## Package artifact only
 

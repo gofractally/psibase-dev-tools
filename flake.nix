@@ -91,14 +91,5 @@
           default = psidk;
         };
       }
-    )
-    // {
-      templates = {
-        package = {
-          path = ./nix/sdk/template;
-          description = "Standalone Rust psibase package workspace (packages/<app>)";
-        };
-        default = self.templates.package;
-      };
-    };
+    );
 }
