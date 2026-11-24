@@ -134,6 +134,31 @@ read_rust_workspace_version() {
   sed -n '/^\[workspace.package\]/,/^\[/{s/^version = "\([^"]*\)"/\1/p}' "$cargo_toml" | head -1
 }
 
+# If start (or an ancestor) is a psibase monorepo checkout, print absolute rust/.
+find_monorepo_rust() {
+  local d="$1"
+  while [[ -n "$d" && "$d" != "/" ]]; do
+    if [[ -f "$d/rust/Cargo.toml" && -d "$d/rust/psibase" ]]; then
+      echo "$d/rust"
+      return 0
+    fi
+    d="$(dirname "$d")"
+  done
+  return 1
+}
+
+# Relative path from package root to monorepo rust/, or "" for crates.io.
+default_psibase_rust_root() {
+  local app_dir="$1"
+  local search_from="$2"
+  local rust_abs
+  if rust_abs="$(find_monorepo_rust "$search_from")"; then
+    realpath -m --relative-to="$app_dir" "$rust_abs"
+  else
+    echo ""
+  fi
+}
+
 cmd_new() {
   local TEMPLATES="${PSIBASE_PACKAGE_TEMPLATES:-}"
   if [[ -z "$TEMPLATES" || ! -d "$TEMPLATES" ]]; then
@@ -218,7 +243,7 @@ EOF
       echo "error: --name is required with --silent" >&2
       exit 1
     fi
-    read -r -p "Package name (≤8 lowercase kebab-case): " NAME
+    read -r -p "Package name (≤10 lowercase kebab-case): " NAME
   fi
   if [[ -z "$NAME" ]]; then
     echo "error: package name is required" >&2
@@ -249,6 +274,8 @@ EOF
 
   local CAMEL
   CAMEL="$(echo "$NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')"
+  local RUST_ROOT
+  RUST_ROOT="$(default_psibase_rust_root "$DEST/$CAMEL" "$DEST")"
   # Binary is `cargo-generate` with a `generate` subcommand; cargo subcommand is
   # `cargo generate` (same flags).
   if command -v cargo >/dev/null 2>&1 && cargo generate --help >/dev/null 2>&1; then
@@ -268,7 +295,11 @@ EOF
   # Stage into a nested temp dir: cargo-generate inspects destination/Cargo.toml
   # and fails on virtual workspaces.
   STAGE="$(mktemp -d "$WORK/stage.XXXXXX")"
-  echo "Generating '$NAME' into $DEST/$CAMEL (psibase $VERSION, crates.io)…"
+  if [[ -n "$RUST_ROOT" ]]; then
+    echo "Generating '$NAME' into $DEST/$CAMEL (psibase $VERSION, path $RUST_ROOT)…"
+  else
+    echo "Generating '$NAME' into $DEST/$CAMEL (psibase $VERSION, crates.io)…"
+  fi
   "${GENERATE[@]}" \
     --path "$WORK/template" \
     --destination "$STAGE" \
@@ -278,7 +309,7 @@ EOF
     --name "$NAME" \
     --define "version=$VERSION" \
     --define "description=${PSIBASE_NEW_DESCRIPTION:-An example application}" \
-    --define "psibase_rust_root=" \
+    --define "psibase_rust_root=$RUST_ROOT" \
     "${PASSTHRU[@]}"
 
   if [[ ! -d "$STAGE/$CAMEL" ]]; then
