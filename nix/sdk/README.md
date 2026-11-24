@@ -1,7 +1,7 @@
 # Package-dev SDK
 
-Rust-oriented SDK for building psibase packages **without** cloning the psibase
-monorepo and without a local `build/` tree. Lives in
+Rust-oriented SDK for building psibase packages from a release toolchain
+(no local CMake/`build/` tree). Lives in
 [psibase-dev-tools](https://github.com/gofractally/psibase-dev-tools).
 
 ## Quick start (x86_64-linux)
@@ -11,8 +11,6 @@ mkdir my-apps && cd my-apps
 nix flake init -t github:gofractally/psibase-dev-tools#package
 # Local checkout of this repo:
 #   nix flake lock --override-input psibase-dev-tools path:/path/to/psibase-dev-tools
-# Local monorepo package template:
-#   nix flake lock --override-input psibase path:/path/to/psibase
 direnv allow   # or: nix develop
 
 psiapp chain up 8090
@@ -40,10 +38,10 @@ nix develop
 - `PSIBASE_DATADIR` → store `share/psibase` (full package set from the tarball)
 - **Local chain:** `psiapp chain up|down|status`
 - **New package:** `psiapp new [--destination DIR] [name]` → scaffolds a
-  stand-alone Cargo workspace from the monorepo `package-templates/basic-01`
-  pin (WIT for Host / Transact / Permissions is vendored in that template)
+  stand-alone Cargo workspace from the pinned `package-templates/basic-01`
+  (WIT for Host / Transact / Permissions is vendored in that template)
 
-You do **not** get: C++/Boost/CMake native toolchain, mdbook, monorepo `build/` on `PATH`.
+You do **not** get: C++/Boost/CMake native toolchain or mdbook.
 
 ### Local chain (`psiapp chain`)
 
@@ -59,10 +57,11 @@ SDK-booted chain).
 
 ### New package (`psiapp new`)
 
-Runs `cargo-generate` against the monorepo `package-templates/` flake input
-into a user-chosen destination. Each package is its own Cargo workspace and
-pins crates.io `psibase` / `psibase_macros` / `psibase_service`. UI is a
-standalone Vite app using on-chain `@psibase/common-lib`.
+Runs `cargo-generate` against the pinned `package-templates/` input into a
+user-chosen destination. Each package is its own Cargo workspace and pins
+crates.io `psibase` / `psibase_macros` / `psibase_service` (default from
+`nix/release.nix` → `psibaseCrateVersion`). UI is a standalone Vite app using
+on-chain `@psibase/common-lib`.
 
 ## Flake template (`#package`)
 
@@ -76,7 +75,8 @@ nix build .#psidk
 ./result/bin/psibase --version
 ```
 
-Release pin: [`../release.nix`](../release.nix).
+Release pin: [`../release.nix`](../release.nix) — bump `crateVersion` + `srcHash`
+when moving trains (`version` and `srcUrl` are derived).
 
 ## Not this SDK
 

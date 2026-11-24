@@ -29,8 +29,7 @@ cargo-psibase install -a http://psibase.localhost:8090/
 psiapp chain down
 ```
 
-Use the SDK shell’s `psibase` (same release as the chain). A monorepo `build/`
-`psibase` from a newer train will mis-encode account names on an SDK-booted chain.
+Use the SDK shell’s `psibase` (same release as the chain).
 
 Each package’s `Cargo.lock` (after the first `cargo` / `cargo-psibase` run)
 should be committed so Cargo does not pull crates that need a newer rustc than

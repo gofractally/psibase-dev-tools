@@ -21,7 +21,8 @@ nix develop
 ```
 
 Docs: **[nix/sdk/README.md](nix/sdk/README.md)**. Bump the released psidk pin in
-[`nix/release.nix`](nix/release.nix) when moving to a new psibase release.
+[`nix/release.nix`](nix/release.nix) when moving to a new psibase release
+(`crateVersion` + `srcHash`; URL follows).
 
 ## Install Psibase DX Tools (local)
 

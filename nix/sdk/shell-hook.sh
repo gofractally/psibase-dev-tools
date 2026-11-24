@@ -2,7 +2,7 @@ export NIX_SHELL_DEPTH=$(("${NIX_SHELL_DEPTH:-0}" + 1))
 export IN_NIX_SHELL=1
 export SHELL="@bashInteractive@/bin/bash"
 
-# psidk tools first — never monorepo build/ paths.
+# Release psidk tools first on PATH.
 export PATH="@psidk@/bin:$PATH:@wasiSdk@/bin"
 # crates.io cargo-psibase (when not in the release tarball) lands here.
 export PATH="$PATH:$HOME/.cargo/bin"
@@ -10,7 +10,7 @@ export PATH="$PATH:$HOME/.cargo/bin"
 export PSIBASE_DATADIR="@psidk@/share/psibase"
 export PSIBASE_PACKAGE_TEMPLATES="@packageTemplates@"
 export PSIBASE_CRATE_VERSION="@psibaseCrateVersion@"
-# Keep schema gen on the SDK train (contributor build/ psitest is often newer).
+# Schema gen must use the same-train psitest as this SDK's psidk tarball.
 export CARGO_PSIBASE_PSITEST="@psidk@/bin/psitest"
 
 export CARGO_COMPONENT_CACHE_DIR="${CARGO_COMPONENT_CACHE_DIR:-$HOME/.cache/cargo-component}"
@@ -36,7 +36,7 @@ fi
 
 # Native Rust must use the Nix gcc wrapper (not rust-lld via `cc`), or
 # RUNPATH is missing and cargo-psibase's build script cannot find libstdc++
-# (wasm-opt/binaryen). Same fix as the monorepo contributor shell.
+# (wasm-opt/binaryen).
 export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER="@cc@/bin/gcc"
 export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER="@cc@/bin/gcc"
 # Host imports stay undefined until cargo-psibase polyfills; rust-lld 1.98+

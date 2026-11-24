@@ -194,11 +194,11 @@ cmd_new() {
         cat <<EOF
 Usage: psiapp new [--destination DIR] [--name NAME] [--version VER] [project-name]
 
-Scaffolds a stand-alone package (own Cargo workspace) from the monorepo
-package-templates/basic-01 pin. WIT deps ship with the template.
+Scaffolds a stand-alone package (own Cargo workspace) from the pinned
+package-templates/basic-01. WIT deps ship with the template.
 
 Destination, name, and version are prompted when omitted. Version defaults
-to rust/Cargo.toml [workspace.package] from the psibase flake input.
+to the template pin’s rust/Cargo.toml [workspace.package].
 EOF
         return 0
         ;;

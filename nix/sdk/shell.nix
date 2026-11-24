@@ -1,6 +1,4 @@
-# Package-developer `nix develop .#sdk` shell (Rust out-of-tree packages).
-# Does not assume a psibase monorepo checkout or local build/ tree.
-# Contributor-only inputs (mdbook, cursor-cli, …) are not imported here.
+# Package-developer `nix develop .#sdk` shell (out-of-tree Rust packages).
 {
   pkgs,
   system,
@@ -10,7 +8,7 @@
   nixpkgs-cargo-generate,
   # packages.psidk
   psidk,
-  # Monorepo package-templates/ (via flake input psibase)
+  # package-templates/ from flake input psibase
   packageTemplates,
 }:
 let
