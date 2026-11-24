@@ -87,13 +87,31 @@
         "type": "github"
       }
     },
+    "psibase": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1795196449,
+        "narHash": "sha256-HCnvk4aLog8flKVWgTp5ClXuF954xIzA2NmT8YEjNCY=",
+        "owner": "gofractally",
+        "repo": "psibase",
+        "rev": "bdce1f6b4461c5c463fe2dfe32e7f6b2b88d9d69",
+        "type": "github"
+      },
+      "original": {
+        "owner": "gofractally",
+        "ref": "mm/nix-pkg-dev-prep",
+        "repo": "psibase",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "fenix": "fenix",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "nixpkgs-cargo-component": "nixpkgs-cargo-component",
-        "nixpkgs-cargo-generate": "nixpkgs-cargo-generate"
+        "nixpkgs-cargo-generate": "nixpkgs-cargo-generate",
+        "psibase": "psibase"
       }
     },
     "rust-analyzer-src": {

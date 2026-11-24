@@ -10,7 +10,7 @@
   nixpkgs-cargo-generate,
   # packages.psidk
   psidk,
-  # nix/sdk/package-templates (out-of-tree cargo-generate tree)
+  # Monorepo package-templates/ (via flake input psibase)
   packageTemplates,
 }:
 let
@@ -55,25 +55,14 @@ let
     } ./yarn-berry-install.sh;
   };
 
-  witFromPsidk = pkgs.writeShellApplication {
-    name = "wit-from-psidk";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.unzip
-      pkgs.wasm-tools
-    ];
-    text = builtins.readFile ./wit-from-psidk.sh;
-  };
-
   # Package-dev CLI (release tarball / packages.psidk stay named "psidk").
   #   psiapp chain up|down|status …
-  #   psiapp new <name>
+  #   psiapp new [--destination DIR] [name]
   psiapp = pkgs.writeShellApplication {
     name = "psiapp";
     runtimeInputs = [
       psidk
       cargoGenerate
-      witFromPsidk
       pkgs.curl
       pkgs.coreutils
       pkgs.findutils
@@ -89,7 +78,6 @@ let
   sdkPackages = with pkgs; [
     psidk
     psiapp
-    witFromPsidk
     rustToolchain
     cargoComponent
     cargoGenerate

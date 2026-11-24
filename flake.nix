@@ -7,7 +7,6 @@
 
     fenix = {
       url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Fragile cargo tools, each pinned to the exact nixpkgs revision that
@@ -19,6 +18,14 @@
     nixpkgs-cargo-generate.url = "github:NixOS/nixpkgs/1d0bb7b61b251a261b0963aacf4b141e770a4f1d";
     # Node: use pkgs.nodejs_24 from nixpkgs (nixos-26.05) — currently 24.22.3
     # (Nov 2026 CVE security release). No separate nixpkgs-nodejs pin.
+
+    # Package template SoT (package-templates/). flake=false: tree only.
+    # Until that lands on main: mm/nix-pkg-dev-prep. Local override:
+    #   nix flake lock --override-input psibase path:/path/to/psibase
+    psibase = {
+      url = "github:gofractally/psibase/mm/nix-pkg-dev-prep";
+      flake = false;
+    };
   };
 
   outputs =
@@ -29,6 +36,7 @@
       fenix,
       nixpkgs-cargo-component,
       nixpkgs-cargo-generate,
+      psibase,
     }:
     flake-utils.lib.eachSystem [ "x86_64-linux" ] (
       system:
@@ -76,7 +84,7 @@
             nixpkgs-cargo-generate
             psidk
             ;
-          packageTemplates = ./nix/sdk/package-templates;
+          packageTemplates = "${psibase}/package-templates";
         };
       in
       {
@@ -91,5 +99,15 @@
           default = psidk;
         };
       }
-    );
+    )
+    // {
+      # Package-dev scaffold: nix flake init -t .#package
+      templates = {
+        package = {
+          path = ./nix/sdk/template;
+          description = "Psibase Package SDK consumer flake (nix develop + psiapp)";
+        };
+        default = self.templates.package;
+      };
+    };
 }

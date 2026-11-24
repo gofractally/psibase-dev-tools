@@ -8,22 +8,22 @@ monorepo and without a local `build/` tree. Lives in
 
 ```bash
 mkdir my-apps && cd my-apps
-nix flake init -t github:gofractally/psibase#package
-# Until the template lands on main:
-#   nix flake init -t github:gofractally/psibase/mm/nix-pkg-dev-prep#package
-# Local bring-up of this SDK shell:
+nix flake init -t github:gofractally/psibase-dev-tools#package
+# Local checkout of this repo:
 #   nix flake lock --override-input psibase-dev-tools path:/path/to/psibase-dev-tools
+# Local monorepo package template:
+#   nix flake lock --override-input psibase path:/path/to/psibase
 direnv allow   # or: nix develop
 
 psiapp chain up 8090
-psiapp new my-app
-cd packages/MyApp/ui && yarn && yarn build
+psiapp new --destination . my-app
+cd MyApp/ui && yarn && yarn build
 cd .. && cargo-psibase package
 cargo-psibase install -a http://psibase.localhost:8090/
 psiapp chain down
 ```
 
-From this repo directly (SDK shell only — no workspace scaffold):
+From this repo directly:
 
 ```bash
 nix develop
@@ -39,20 +39,11 @@ nix develop
 - Flake `wasi-sdk`, mkcert, SoftHSM
 - `PSIBASE_DATADIR` → store `share/psibase` (full package set from the tarball)
 - **Local chain:** `psiapp chain up|down|status`
-- **New app:** `psiapp new <name>` → scaffolds under `./packages`, then runs
-  `wit-from-psidk` so Host / Transact / Permissions WIT are extracted from the
-  same `$PSIBASE_DATADIR/packages/*.psi` that booted the chain
+- **New package:** `psiapp new [--destination DIR] [name]` → scaffolds a
+  stand-alone Cargo workspace from the monorepo `package-templates/basic-01`
+  pin (WIT for Host / Transact / Permissions is vendored in that template)
 
 You do **not** get: C++/Boost/CMake native toolchain, mdbook, monorepo `build/` on `PATH`.
-
-### WIT from the release tarball
-
-Plugin interfaces are **not** committed under the template. `wit-from-psidk`
-unzips `Host.psi` / `Transact.psi` / `Permissions.psi` from `PSIBASE_DATADIR`
-and runs `wasm-tools component wit` on their plugin wasm, then writes
-`plugin/wit/deps/*/world.wit` (plus conventional `world imports` stubs that
-exist only in source WIT, not in the component). Bumping `nix/release.nix`
-picks up matching interfaces automatically.
 
 ### Local chain (`psiapp chain`)
 
@@ -66,17 +57,17 @@ picks up matching interfaces automatically.
 Keep **psibase CLI and chain on the same release** (SDK tooling with an
 SDK-booted chain).
 
-### New app (`psiapp new`)
+### New package (`psiapp new`)
 
-Runs `cargo-generate` against [`package-templates/`](package-templates/) into
-`./packages`, then `wit-from-psidk`. The template pins crates.io `psibase` /
-`psibase_macros`. UI is a standalone Vite app using on-chain `@psibase/common-lib`.
+Runs `cargo-generate` against the monorepo `package-templates/` flake input
+into a user-chosen destination. Each package is its own Cargo workspace and
+pins crates.io `psibase` / `psibase_macros` / `psibase_service`. UI is a
+standalone Vite app using on-chain `@psibase/common-lib`.
 
 ## Flake template (`#package`)
 
-Workspace scaffold lives in the **psibase monorepo** (`nix/sdk/template/`).
-Instantiate with `nix flake init -t github:gofractally/psibase#package`. The
-generated `flake.nix` pulls this repo’s Package SDK shell.
+`nix/sdk/template/` — consumer `flake.nix` / `.envrc` only. Create packages
+with `psiapp new` after `nix develop`.
 
 ## Package artifact only
 

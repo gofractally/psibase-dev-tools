@@ -14,7 +14,7 @@ Commands:
   chain up [port] [producer] [state-dir]   Start fresh chain, boot, print API URL
   chain down                               Stop the chain started by up
   chain status                             Show pid / API if running
-  new <project-name>                       Scaffold app into ./packages
+  new [--destination DIR] [project-name]   Scaffold a stand-alone package
 
 Environment (chain):
   PSIBASE_DEVNET_HOST / PORT / PRODUCER / DIR
@@ -129,24 +129,6 @@ EOF
   esac
 }
 
-find_packages_dir() {
-  local d
-  d="$(pwd)"
-  while [[ "$d" != "/" ]]; do
-    if [[ -f "$d/packages/Cargo.toml" ]]; then
-      echo "$d/packages"
-      return 0
-    fi
-    if [[ -f "$d/Cargo.toml" ]] && grep -q '^\[workspace\]' "$d/Cargo.toml" 2>/dev/null \
-      && [[ "$(basename "$d")" == "packages" ]]; then
-      echo "$d"
-      return 0
-    fi
-    d="$(dirname "$d")"
-  done
-  return 1
-}
-
 cmd_new() {
   local VERSION="${PSIBASE_CRATE_VERSION:-@psibaseCrateVersion@}"
   local TEMPLATES="${PSIBASE_PACKAGE_TEMPLATES:-}"
@@ -155,66 +137,116 @@ cmd_new() {
     exit 1
   fi
 
-  local PACKAGES_DIR
-  PACKAGES_DIR="$(find_packages_dir)" || {
-    echo "error: no packages/Cargo.toml found above $(pwd)" >&2
-    echo "  Run from an SDK workspace (flake init -t github:gofractally/psibase#package), or cd into it." >&2
-    exit 1
-  }
+  local DEST=""
+  local NAME=""
+  local PASSTHRU=()
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --destination|-d)
+        DEST="${2:-}"
+        shift 2
+        ;;
+      --name|-n)
+        NAME="${2:-}"
+        shift 2
+        ;;
+      -h|--help)
+        cat <<EOF
+Usage: psiapp new [--destination DIR] [project-name]
 
-  local NAME="${1:-}"
-  if [[ -z "$NAME" ]]; then
-    echo "Usage: psiapp new <project-name>" >&2
-    echo "  Creates packages/<AppName>/ (service, query-service, plugin, ui)" >&2
+Scaffolds a stand-alone package (own Cargo workspace) from the monorepo
+package-templates/basic-01 pin. WIT deps ship with the template.
+
+Destination and name are prompted when omitted.
+EOF
+        return 0
+        ;;
+      *)
+        if [[ -z "$NAME" && "$1" != -* ]]; then
+          NAME="$1"
+        else
+          PASSTHRU+=("$1")
+        fi
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$DEST" ]]; then
+    read -r -p "Destination directory (parent of the new package): " DEST
+  fi
+  if [[ -z "$DEST" ]]; then
+    echo "error: destination is required" >&2
     exit 1
   fi
-  shift || true
+  mkdir -p "$DEST"
+  DEST="$(cd "$DEST" && pwd)"
 
-  # Flake copies live in the Nix store (mode 0444). cargo-generate copies
-  # those modes into its work dir then fails with EACCES when rewriting files.
-  local TEMPLATE_SRC="$TEMPLATES/sdk-basic-01"
+  if [[ -z "$NAME" ]]; then
+    read -r -p "Package name (≤8 lowercase kebab-case): " NAME
+  fi
+  if [[ -z "$NAME" ]]; then
+    echo "error: package name is required" >&2
+    exit 1
+  fi
+
+  local TEMPLATE_SRC="$TEMPLATES/basic-01"
   if [[ ! -d "$TEMPLATE_SRC" ]]; then
     echo "error: missing template at $TEMPLATE_SRC" >&2
     exit 1
   fi
+  # Flake copies live in the Nix store (mode 0444). cargo-generate copies
+  # those modes into its work dir then fails with EACCES when rewriting files.
   # Not `local`: EXIT trap must still see WORK after cmd_new returns/fails.
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/psiapp-new.XXXXXX")"
   trap 'rm -rf "$WORK"' EXIT
   cp -a "$TEMPLATE_SRC" "$WORK/template"
   chmod -R u+w "$WORK/template"
 
-  echo "Generating '$NAME' into $PACKAGES_DIR (psibase $VERSION)…"
-  cargo generate \
+  local CAMEL
+  CAMEL="$(echo "$NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')"
+  # Binary is `cargo-generate` with a `generate` subcommand; cargo subcommand is
+  # `cargo generate` (same flags).
+  if command -v cargo >/dev/null 2>&1 && cargo generate --help >/dev/null 2>&1; then
+    GENERATE=(cargo generate)
+  elif command -v cargo-generate >/dev/null 2>&1; then
+    GENERATE=(cargo-generate generate)
+  else
+    echo "error: cargo-generate not found" >&2
+    exit 1
+  fi
+
+  if [[ -e "$DEST/$CAMEL" ]]; then
+    echo "error: $DEST/$CAMEL already exists" >&2
+    exit 1
+  fi
+
+  # Stage into a nested temp dir: cargo-generate inspects destination/Cargo.toml
+  # and fails on virtual workspaces.
+  STAGE="$(mktemp -d "$WORK/stage.XXXXXX")"
+  echo "Generating '$NAME' into $DEST/$CAMEL (psibase $VERSION, crates.io)…"
+  "${GENERATE[@]}" \
     --path "$WORK/template" \
-    --destination "$PACKAGES_DIR" \
+    --destination "$STAGE" \
     --init \
     -v \
     --allow-commands \
     --name "$NAME" \
     --define "version=$VERSION" \
     --define "description=${PSIBASE_NEW_DESCRIPTION:-An example application}" \
-    "$@"
+    --define "psibase_rust_root=" \
+    "${PASSTHRU[@]}"
 
-  # Hook scripts must remain available during generate; strip leftovers.
-  rm -f "$PACKAGES_DIR"/*.rhai
-
-  if [[ -d "$PACKAGES_DIR/.workspace-placeholder" ]]; then
-    rm -rf "$PACKAGES_DIR/.workspace-placeholder"
-    if grep -q '\.workspace-placeholder' "$PACKAGES_DIR/Cargo.toml"; then
-      grep -v '\.workspace-placeholder' "$PACKAGES_DIR/Cargo.toml" >"$PACKAGES_DIR/Cargo.toml.tmp"
-      mv "$PACKAGES_DIR/Cargo.toml.tmp" "$PACKAGES_DIR/Cargo.toml"
-    fi
+  if [[ ! -d "$STAGE/$CAMEL" ]]; then
+    echo "error: expected $STAGE/$CAMEL after generate" >&2
+    exit 1
   fi
-
-  local CAMEL
-  CAMEL="$(echo "$NAME" | sed -E 's/(^|-)([a-z])/\U\2/g')"
-  local WIT_DEPS="$PACKAGES_DIR/$CAMEL/plugin/wit/deps"
-  wit-from-psidk "$WIT_DEPS"
+  mv "$STAGE/$CAMEL" "$DEST/"
 
   echo ""
   echo "Next:"
-  echo "  cd $PACKAGES_DIR/$CAMEL/ui && yarn && yarn build"
-  echo "  cd $PACKAGES_DIR/$CAMEL && cargo-psibase package"
+  echo "  cd $DEST/$CAMEL/ui && yarn && yarn build"
+  echo "  cd $DEST/$CAMEL && cargo-psibase package"
 }
 
 cmd="${1:-}"
