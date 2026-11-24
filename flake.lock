@@ -2,9 +2,7 @@
   "nodes": {
     "fenix": {
       "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs",
         "rust-analyzer-src": "rust-analyzer-src"
       },
       "locked": {
@@ -41,16 +39,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1794756927,
-        "narHash": "sha256-IfuPcOpwC+bYvBdtUhA9hHhY7xV7k9T5LeOTZFiJB4o=",
-        "owner": "NixOS",
+        "lastModified": 1795234589,
+        "narHash": "sha256-f/VVvxf5RsQgWVhUtefoca5ktVg0DA2bnkMOcmSnozo=",
+        "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "b349185bb79c7cf7ad8ea8c097931730bf473c71",
+        "rev": "2786a2a72088ecf32aea5b3ec52099e6a7cff78f",
         "type": "github"
       },
       "original": {
-        "owner": "NixOS",
-        "ref": "nixos-26.05",
+        "owner": "nixos",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -87,19 +85,34 @@
         "type": "github"
       }
     },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1794756927,
+        "narHash": "sha256-IfuPcOpwC+bYvBdtUhA9hHhY7xV7k9T5LeOTZFiJB4o=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "b349185bb79c7cf7ad8ea8c097931730bf473c71",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-26.05",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "psibase": {
       "flake": false,
       "locked": {
-        "lastModified": 1795196449,
-        "narHash": "sha256-HCnvk4aLog8flKVWgTp5ClXuF954xIzA2NmT8YEjNCY=",
+        "lastModified": 1795037635,
+        "narHash": "sha256-jqMzjCsKt8KKCNNUwFoX8VLuxlkNieYJfqelsXfGMis=",
         "owner": "gofractally",
         "repo": "psibase",
-        "rev": "bdce1f6b4461c5c463fe2dfe32e7f6b2b88d9d69",
+        "rev": "db601e572fec0e62f801658173c1d46abf8816fc",
         "type": "github"
       },
       "original": {
         "owner": "gofractally",
-        "ref": "mm/nix-pkg-dev-prep",
         "repo": "psibase",
         "type": "github"
       }
@@ -108,7 +121,7 @@
       "inputs": {
         "fenix": "fenix",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": "nixpkgs_2",
         "nixpkgs-cargo-component": "nixpkgs-cargo-component",
         "nixpkgs-cargo-generate": "nixpkgs-cargo-generate",
         "psibase": "psibase"

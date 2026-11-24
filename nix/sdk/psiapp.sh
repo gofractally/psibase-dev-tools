@@ -14,7 +14,7 @@ Commands:
   chain up [port] [producer] [state-dir]   Start fresh chain, boot, print API URL
   chain down                               Stop the chain started by up
   chain status                             Show pid / API if running
-  new [--destination DIR] [project-name]   Scaffold a stand-alone package
+  new [--destination DIR] [--version VER] [name]   Scaffold a stand-alone package
 
 Environment (chain):
   PSIBASE_DEVNET_HOST / PORT / PRODUCER / DIR
@@ -129,8 +129,12 @@ EOF
   esac
 }
 
+read_rust_workspace_version() {
+  local cargo_toml="$1"
+  sed -n '/^\[workspace.package\]/,/^\[/{s/^version = "\([^"]*\)"/\1/p}' "$cargo_toml" | head -1
+}
+
 cmd_new() {
-  local VERSION="${PSIBASE_CRATE_VERSION:-@psibaseCrateVersion@}"
   local TEMPLATES="${PSIBASE_PACKAGE_TEMPLATES:-}"
   if [[ -z "$TEMPLATES" || ! -d "$TEMPLATES" ]]; then
     echo "error: PSIBASE_PACKAGE_TEMPLATES not set (enter nix develop)" >&2
@@ -139,7 +143,9 @@ cmd_new() {
 
   local DEST=""
   local NAME=""
+  local VERSION=""
   local PASSTHRU=()
+  local SILENT=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --destination|-d)
@@ -150,14 +156,24 @@ cmd_new() {
         NAME="${2:-}"
         shift 2
         ;;
+      --version)
+        VERSION="${2:-}"
+        shift 2
+        ;;
+      --silent|-s)
+        SILENT=1
+        PASSTHRU+=("$1")
+        shift
+        ;;
       -h|--help)
         cat <<EOF
-Usage: psiapp new [--destination DIR] [project-name]
+Usage: psiapp new [--destination DIR] [--name NAME] [--version VER] [project-name]
 
 Scaffolds a stand-alone package (own Cargo workspace) from the monorepo
 package-templates/basic-01 pin. WIT deps ship with the template.
 
-Destination and name are prompted when omitted.
+Destination, name, and version are prompted when omitted. Version defaults
+to rust/Cargo.toml [workspace.package] from the psibase flake input.
 EOF
         return 0
         ;;
@@ -172,7 +188,22 @@ EOF
     esac
   done
 
+  # Same tree as the template pin: <psibase>/rust/Cargo.toml
+  local DEFAULT_VERSION=""
+  local RUST_CARGO
+  RUST_CARGO="$(dirname "$TEMPLATES")/rust/Cargo.toml"
+  if [[ -f "$RUST_CARGO" ]]; then
+    DEFAULT_VERSION="$(read_rust_workspace_version "$RUST_CARGO")"
+  fi
+  if [[ -z "$DEFAULT_VERSION" ]]; then
+    DEFAULT_VERSION="${PSIBASE_CRATE_VERSION:-@psibaseCrateVersion@}"
+  fi
+
   if [[ -z "$DEST" ]]; then
+    if [[ "$SILENT" -eq 1 ]]; then
+      echo "error: --destination is required with --silent" >&2
+      exit 1
+    fi
     read -r -p "Destination directory (parent of the new package): " DEST
   fi
   if [[ -z "$DEST" ]]; then
@@ -183,11 +214,24 @@ EOF
   DEST="$(cd "$DEST" && pwd)"
 
   if [[ -z "$NAME" ]]; then
+    if [[ "$SILENT" -eq 1 ]]; then
+      echo "error: --name is required with --silent" >&2
+      exit 1
+    fi
     read -r -p "Package name (≤8 lowercase kebab-case): " NAME
   fi
   if [[ -z "$NAME" ]]; then
     echo "error: package name is required" >&2
     exit 1
+  fi
+
+  if [[ -z "$VERSION" ]]; then
+    if [[ "$SILENT" -eq 1 ]]; then
+      VERSION="$DEFAULT_VERSION"
+    else
+      read -r -p "Psibase version [$DEFAULT_VERSION]: " VERSION
+      VERSION="${VERSION:-$DEFAULT_VERSION}"
+    fi
   fi
 
   local TEMPLATE_SRC="$TEMPLATES/basic-01"

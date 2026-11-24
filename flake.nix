@@ -20,10 +20,9 @@
     # (Nov 2026 CVE security release). No separate nixpkgs-nodejs pin.
 
     # Package template SoT (package-templates/). flake=false: tree only.
-    # Until that lands on main: mm/nix-pkg-dev-prep. Local override:
-    #   nix flake lock --override-input psibase path:/path/to/psibase
+    # Local override: nix flake lock --override-input psibase path:/path/to/psibase
     psibase = {
-      url = "github:gofractally/psibase/mm/nix-pkg-dev-prep";
+      url = "github:gofractally/psibase";
       flake = false;
     };
   };
